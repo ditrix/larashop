@@ -1,0 +1,125 @@
+контроллеры/маршруты
+
+Route::get('/catalog/index', 'CatalogController@index')->name('catalog.index');
+...
+Route::get('/catalog/product/{slug}', 'CatalogController@product')->name('catalog.product');
+
+#php artisan make:controller CatalogController
+
+примеры
+    public function index() {
+        $roots = Category::where('parent_id', 0)->get();
+        return view('catalog.index', compact('roots'));
+    }
+
+    public function category($slug) {
+        $category = Category::where('slug', $slug)->firstOrFail();
+        $products = Product::where('category_id', $category->id)->get();
+        return view('catalog.category', compact('category', 'products'));
+    }
+
+    public function product($slug) {
+        $product = Product::select(
+            'products.*',
+            'categories.name as category_name',
+            'categories.slug as category_slug',
+            'brands.name as brand_name',
+            'brands.slug as brand_slug')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->join('brands', 'products.brand_id', '=', 'brands.id')
+            ->where('products.slug', $slug)
+            ->firstOrFail();
+        return view('catalog.product', compact('product'));
+    }
+==========  темпдлейтс
+{{-- это blade комментарий--}}
+
+{{-- 
+    resources/views/catalog/index.blade.php 
+    вываод списка категорий 
+--}}
+
+<h1>Каталог товаров</h1>
+
+<ul>
+    @foreach ($roots as $root)
+        <li>
+            <a href="{{ route('catalog.category', ['slug' => $root->slug]) }}">
+                {{ $root->name }}
+            </a>
+        </li>
+    @endforeach
+</ul>
+--
+{{--вывод товаров определенного бренда--}}
+
+<h1>Бренд: {{ $brand->name }}</h1>  {*}
+<ul>
+    @foreach ($products as $product)
+        <li>
+            <a href="{{ route('catalog.product', ['slug' => $product->slug]) }}">
+                {{ $product->name }}
+            </a>
+        </li>
+    @endforeach
+</ul>
+--
+{{-- вывод конкретного товара --}}
+
+<h1>Товар: {{ $product->name }}</h1>
+<p>Цена: {{ number_format($product->price, 2, '.', '') }}</p>
+<p>
+    Категория:
+    <a href="{{ route('catalog.category', ['slug' => $product->category_slug]) }}">
+        {{ $product->category_name }}
+    </a>
+</p>
+<p>
+    Бренд:
+    <a href="{{ route('catalog.brand', ['slug' => $product->brand_slug]) }}">
+        {{ $product->brand_name }}
+    </a>
+</p>
+<p>{{ $product->content }}</p>
+================================================= лейаутты
+
+использование bootstrap
+# composer require laravel/ui
+NB! при установке получаем ошибку вида (актуально для laravel6 laravel7)
+...
+ - Root composer.json requires laravel/ui ^3.2 -> satisfiable by laravel/ui[v3.2.0, 3.x-dev]
+"You need laravel/ui v. 2 with Laravel 7." 
+
+т.о.  устанавливаем командой
+# composer require laravel/ui "^2.0" -vvv
+
+# php artisan ui bootstrap
+# npm install && npm run dev
+
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Магазин</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script src="{{ asset('js/app.js') }}"></script>
+</head>
+<body>
+...
+@yeld('content')
+...
+</body>
+</html>
+
+---------- в каждом темплейте. соответственно
+@extends('layout.site')
+@section('content')
+...
+    содержимое темплейтемплейта..
+    <h1>Товар: {{ $product->name }}</h1>
+    ...
+...
+@endsection
