@@ -24,7 +24,7 @@
             <!-- Этот блок расположен слева -->
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Каталог</a>
+                    <a class="nav-link" href="{{ route('catalog.index')}}"  >Каталог</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Доставка</a>

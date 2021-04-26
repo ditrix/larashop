@@ -1,0 +1,24 @@
+// Создание главной страницы сайта, работа над шаблонами
+контроллер главной
+php artisan make:controller IndexController --invokable
+содерж
+class IndexController extends Controller {
+...
+    public function __invoke(Request $request) {
+        return view('index');
+    }
+}
+в роутах
+// маршрут для главной страницы без указания метода
+Route::get('/', 'IndexController')->name('index');
+
+основной блейд
+views/index.blade.php
+-------
+общий код из блейдов (перебор товаров  цикле выносим в отдельн блейд)
+catalog/part/product.blade.php
+использ
+    @foreach ($products as $product)
+        @include('catalog.part.product',['prouct'=>$product]) {{-- nb! полн путь к блейду --}}
+    @endforeach
+    

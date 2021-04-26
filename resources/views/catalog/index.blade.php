@@ -2,16 +2,17 @@
 @section('content')
 
 <h1>Каталог товаров</h1>
-<ul>
-
-    @foreach($roots as $root)
-        <li>
-
-            <a href="{{ route('catalog.category', ['slug' => $root->slug]) }}">
-                {{ $root->name }}
-            </a>
-        </li>
+<p>
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Atque ducimus, eligendi
+    exercitationem expedita, iure iusto laborum magnam qui quidem repellat similique
+    tempora tempore ullam! Deserunt doloremque impedit quis repudiandae voluptas?
+</p>
+<h2>разделы каталога</h2>
+<div class="row">
+    @foreach($roots as $root)   
+        @include('catalog.part.category',['root' => $root])
     @endforeach
-</ul>
+</div>    
+
 @endsection
 
