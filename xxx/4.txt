@@ -1,1 +1,72 @@
-работа с моделями связыачющие методы (https://tokmakov.msk.ru/blog/item/559)
+1. работа с моделями связыачющие методы (https://tokmakov.msk.ru/blog/item/559)
+2. 404 страница
+
+перенос прямых выборок данных в модели 
+было
+
+class CatalogController extends Controller {
+    ...
+       public function category($slug) {
+        $category = Category::where('slug', $slug)->firstOrFail();
+        $products = Product::where('category_id', $category->id)->get();
+        return view('catalog.category', compact('category', 'products'));
+    }
+    ...
+        public function product($slug){
+         $product = Product::select(
+             'products.*',
+             'categories.name as category_name',
+             'categories.slug as category_slug',
+             'brands.name as brand_name',
+             'brands.slug as brand_slug'
+         )
+             ->join('categories','products.category_id','=','categories.id')
+             ->join('brands','products.brand_id','=','brands.id')
+             ->where('products.slug',$slug)->firstOrFail();
+        
+        return view('catalog.product',compact('product'));
+    }
+}
+
+}
+-------------
+стало в модели
+
+class Category extends Model {
+    public function getProducts(){
+        return Product::where('category_id',$this->id)->get();
+    }
+}
+
+в контроллере
+class CatalogController extends Controller {
+    ...
+       public function category($slug) {
+        $category = Category::where('slug', $slug)->firstOrFail();
+        $products = $category->getProducts();
+        return view('catalog.category', compact('category', 'products'));
+    }
+    ...
+    public function product($slug){
+        $product = Product::where('slug',$slug)->firstOrFail();
+        $category = $product->getCategory();
+        $brand = $product->getBrand();
+        return view('catalog.product',compact('product','category','brand'));
+    }
+}
+---------------------- 
+использование связей в моделях (категоря->одинкомногим->продукт, бренд->одинкомногим->продукт)
+class Category extends Model {
+    public function products(){
+        return $this->hasMany(Product::class);
+    }
+}
+class CatalogController extends Controller {
+    ...
+    public function category($slug) {
+        $category = Category::where('slug', $slug)->firstOrFail();
+        return view('catalog.category', compact('category'));
+    }
+}
+============================ 404 страница
+создаем отдельный view каталог errors

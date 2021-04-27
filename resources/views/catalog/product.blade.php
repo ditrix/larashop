@@ -27,14 +27,14 @@
                 <div class="row">
                     <div class="col-md-6">
                         Категория:
-                        <a href="{{ route('catalog.category', ['slug' => $product->category_slug]) }}">
-                            {{ $product->category_name }}
+                         <a href="{{ route('catalog.category', ['slug' => $category->slug]) }}">
+                            {{ $category->name }}
                         </a>
                     </div>
                     <div class="col-md-6 text-right">
                         Бренд:
-                        <a href="{{ route('catalog.brand', ['slug' => $product->brand_slug]) }}">
-                            {{ $product->brand_name }}
+                        <a href="{{ route('catalog.brand', ['slug' => $brand->slug]) }}">
+                            {{ $brand->name }}
                         </a>
                     </div>
                 </div>
