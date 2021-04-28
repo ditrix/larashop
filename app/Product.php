@@ -6,15 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    // public function getCategory(){
-    //     return Category::find($this->category_id);
-    // }
+    
+    /* один из вариантов */
+    public function getCategory(){
+        return Category::find($this->category_id);
+    }
 
-    // public function getBrand(){
-    //      return Brand::find($this->brand_id);
-    // }
+    public function getBrand(){
+         return Brand::find($this->brand_id);
+    }
 
 
+
+     /* другой вариант (используем связи) */   
      /**
      * Связь «товар принадлежит» таблицы `products` с таблицей `categories`
      */

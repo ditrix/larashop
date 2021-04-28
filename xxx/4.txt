@@ -61,6 +61,17 @@ class Category extends Model {
         return $this->hasMany(Product::class);
     }
 }
+
+class Product extends Model{
+     /**
+     * Связь «товар принадлежит» таблицы `products` с таблицей `categories`
+     */
+     public function category() {
+        return $this->belongsTo(Category::class);
+    }
+        ...
+}
+
 class CatalogController extends Controller {
     ...
     public function category($slug) {
