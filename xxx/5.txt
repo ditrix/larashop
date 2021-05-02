@@ -67,3 +67,14 @@ $basket_id = $request->cookie('basket_id');
 иначе abort(404)
 == 2 код блейда
  выводим в цикле строками таблицы 
+ ------------------- от себя
+ при пустой корзине падает функционал из-зи findOrFail
+ потому использовано
+      $basket = Basket::find($basket_id);
+            if($basket == null){
+                $basket = Basket::create();
+            } else {
+                $basket->touch(); // обновдение updated_at
+            }
+    кроме того при отсутствии корзины передаем пустышку в блейд а там уже ее обрабатыаем
+            

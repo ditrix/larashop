@@ -29,22 +29,8 @@ class CreateBasketProductTable extends Migration
            ->references('id')
            ->on('products')
            ->cascadeOnDelete();
+           $table->timestamps();
 
-
-
-                // $table->id();
-            // $table->bigInteger('basket_id')->unsigned()->nullable();
-            // $table->bigInteger('product_id')->unsigned()->nullable();
-            // $table->unsignedTinyInteger('quantity');
-
-            // $table->foreign('basket_id')
-            //     ->references('id')
-            //      ->on('baskets');
-            //     ->cascadeOnDelete()
-            // $table->foreign('product_id')
-            //     ->references('id')
-            //     ->on('products')
-            //     ->cascadeOnDelete();
 
 
         });

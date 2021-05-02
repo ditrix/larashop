@@ -12,11 +12,17 @@ class BasketController extends Controller
 
         $basket_id = $request->cookie('basket_id');
       
+        $products = [];    
         if(!empty($basket_id)){
-            $products = Basket::findOrFail($basket_id)->products;
-        } else {
-            abort(404);
+            $backet  = Basket::find($basket_id);
+            //var_dump($backet); die;
+            if($backet !== null){
+                $products = $backet->products;
+            }
         }
+        // } else {
+        //     abort(404);
+        // }
 
 
         return view('backet.index',compact('products')); // форма ввода
@@ -32,14 +38,22 @@ class BasketController extends Controller
     public function add(Request $request, $id){
 
         $basket_id = $request->cookie('basket_id');
+     
         $quantity = $request->quantity ?? 1;   
         
         if(empty($basket_id)) {
+            
             $basket = Basket::create();
+           
             $basket_id = $basket->id; 
         } else {
-            $basket = Basket::findOrFail($basket_id);
+            //$basket = Basket::findOrFail($basket_id);
+            $basket = Basket::find($basket_id);
+            if($basket == null){
+                $basket = Basket::create();
+            } else {
             $basket->touch(); // обновдение updated_at
+            }
         }
 
         if($basket->products->contains($id)){  // если корзина уже содержит продукт
