@@ -2,4 +2,68 @@
 будет смоделирована связь многие-ко-многим  products<-->backet
 будет использован мидлар EncryptCoockies (управление куками, а именно вкл/откл)
 
-product->backet_prouct<-backet
+products---->backet_prouct<----+backets
+ class Basket extends Model {
+    /** Связь «многие ко многим» таблицы `baskets` с таблицей `products` */
+    public function products() {
+        return $this->belongsToMany(Product::class)->withPivot('quantity');
+    }
+}
+
+class Product extends Model {
+    /**  Связь «многие ко многим» таблицы `products` с таблицей `baskets` */
+    public function baskets() {
+        return $this->belongsToMany(Basket::class)->withPivot('quantity');
+    }
+}
+// quantity - столбец из связующей табл backet_prouct
+добавление товара: добавл запись в backet_prouct обновляем если она там есть. 
+кажд раз играемся с backet_prouct.quantity
+
+Route::post('/basket/add/{id}', 'BasketController@add')->where('id', '[0-9]+')->name('basket.add');
+
+   <!-- Форма для добавления товара в корзину -->
+    <form action="{{ route('basket.add', ['id' => $product->id]) }}"
+          method="post" class="form-inline">
+        @csrf
+        ...
+        <input type="text" name="quantity" id="input-quantity" value="1"
+               class="form-control mx-2 w-25">
+        <button type="submit" class="btn btn-success">Добавить в корзину</button>
+    </form>
+
+// самое интересное в контроллере....    
+add(Request $request, $id){  // добавить\изменить запись в промеж таблице
+    
+    $basket_id = $request->cookie('basket_id');
+    $quantity = $request->quantity; // поле с кол-м товара
+    if(empty($basket_id)){
+        $basket = Basket::create();
+        $backet_id = $basket->id;
+    } else {
+        $basket = Basket::findOrFail($id);
+        $basket->touch(); // обновить updated_at
+    }
+    if($basket->products->contains($id)){  // если в корзине есть продукт заявленого id
+        $pivotRow = $basket->products()->where('product_id',$id); // обновляем pivot
+        $quantity = $pivotRow->quantity + $quantity; 
+        $pivotRow->update(['quantity' => $quantity]);
+    } else {   
+        // добавляем (аттачим нов запись в промеж таблицу)
+        $basket->products()->attach($id, ['quantity' => $quantity]);
+    }
+     return back()->withCookie(cookie('basket_id', $basket_id, 525600)); // просто возвращаемся с куки
+ }
+ --------------- отображение 
+== 1 код контроллера
+если есть кука корзины в реквесте  возвращаем список продуктов в блейд
+$basket_id = $request->cookie('basket_id');
+        if (!empty($basket_id)) {
+            $products = Basket::findOrFail($basket_id)->products;
+            return view('basket.index', compact('products'));
+        } else {
+            abort(404);
+        }
+иначе abort(404)
+== 2 код блейда
+ выводим в цикле строками таблицы 

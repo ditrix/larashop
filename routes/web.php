@@ -15,5 +15,9 @@ Route::get('/catalog/category/{slug}','CatalogController@category')->name('catal
 Route::get('/catalog/brand/{slug}','CatalogController@brand')->name('catalog.brand');
 Route::get('/catalog/product/{slug}','CatalogController@product')->name('catalog.product');
 
-Route::get('/backet/index','BacketController@index')->name('backet.index');
-Route::get('/backet/checkout','BacketController@checkout')->name('backet.checkout');
+Route::get('/basket/index','BasketController@index')->name('basket.index');
+Route::get('/basket/checkout','BasketController@checkout')->name('basket.checkout');
+
+//Route::post('/backet/add/{id}','BacketController@add')->where('id','[0-9]+')->name('backet.add');
+
+Route::post('/basket/add/{id}', 'BasketController@add')->where('id', '[0-9]+')->name('basket.add');

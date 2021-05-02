@@ -12,7 +12,7 @@ class CatalogController extends Controller {
         return view('catalog.category', compact('category', 'products'));
     }
     ...
-        public function product($slug){
+    public function product($slug){
          $product = Product::select(
              'products.*',
              'categories.name as category_name',
@@ -28,7 +28,6 @@ class CatalogController extends Controller {
     }
 }
 
-}
 -------------
 стало в модели
 
@@ -54,6 +53,7 @@ class CatalogController extends Controller {
         return view('catalog.product',compact('product','category','brand'));
     }
 }
+
 ---------------------- 
 использование связей в моделях (категоря->одинкомногим->продукт, бренд->одинкомногим->продукт)
 class Category extends Model {
@@ -80,4 +80,5 @@ class CatalogController extends Controller {
     }
 }
 ============================ 404 страница
-создаем отдельный view каталог errors
+создаем отдельный view каталог errors  (thats all)
+ 
