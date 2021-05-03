@@ -26,9 +26,22 @@
                 <td><a href="{{ route('catalog.product', [$product->slug]) }}">{{ $product->name }}</a></td>
                 <td>{{ number_format($itemPrice, 2, '.', '') }}</td>
                 <td>
-                    <i class="fas fa-minus-square"></i>
+                    <form action="{{ route('basket.minus',['id' => $product->id]) }}" method="post" class="d-inline">
+                        @csrf
+                        <button type="submit" class="m-0 p-0 border-0 bg-transparent">
+                            <i class="fa fa-minus-square"></i>
+                        </button>    
+                    </form>
+
                         <span class="mx-1">{{ $itemQuantity }}</span>
-                    <i class="fas fa-plus-square"></i>
+                    
+                    <form action="{{ route('basket.plus',['id' => $product->id]) }}" method="post" class="d-inline">
+                        @csrf    
+                        <button type="submit" class="m-0 p-0 border-0 bg-transparent">
+                            <i class="fa fa-plus-square"></i>
+                        </button>    
+                    </form>
+
                 </td>
                 <td>{{ number_format($itemCost, 2, '.', '') }}</td>
             </tr>

@@ -1,3 +1,4 @@
+https://tokmakov.msk.ru/blog/item/557
 контроллеры/маршруты
 
 Route::get('/catalog/index', 'CatalogController@index')->name('catalog.index');

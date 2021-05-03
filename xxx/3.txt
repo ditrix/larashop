@@ -1,3 +1,4 @@
+https://tokmakov.msk.ru/blog/item/558
 // Создание главной страницы сайта, работа над шаблонами
 контроллер главной
 php artisan make:controller IndexController --invokable

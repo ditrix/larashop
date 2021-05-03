@@ -21,3 +21,6 @@ Route::get('/basket/checkout','BasketController@checkout')->name('basket.checkou
 //Route::post('/backet/add/{id}','BacketController@add')->where('id','[0-9]+')->name('backet.add');
 
 Route::post('/basket/add/{id}', 'BasketController@add')->where('id', '[0-9]+')->name('basket.add');
+
+Route::post('/basket/plus/{id}', 'BasketController@plus')->where('id', '[0-9]+')->name('basket.plus');
+Route::post('/basket/minus/{id}', 'BasketController@minus')->where('id', '[0-9]+')->name('basket.minus');
