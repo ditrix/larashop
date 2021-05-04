@@ -13,3 +13,150 @@ https://tokmakov.msk.ru/blog/item/561
 в роутах (аналогично add)
 Route::post('/basket/plus/{id}', 'BasketController@plus')->where('id', '[0-9]+')->name('basket.plus');
 Route::post('/basket/minus/{id}', 'BasketController@minus')->where('id', '[0-9]+')->name('basket.minus');
+--- в контроллере
+  public function minus(Request $request, $id){
+        $basket_id = $request->cookie('basket_id');
+        if(empty($basket_id)){
+            abort(404);
+        }
+        $this->change($basket_id, $id, -1);
+        return redirect()->route('basket.index')->withCookie(cookie('basket_id', $basket_id, 525600));
+    }
+
+     public function change($basket_id, $product_id, $count = 0){
+        
+        $basket = Basket::findOrFail($basket_id);
+        if($basket->products->contains($product_id)){  // граемось с доп таблицой
+            $pivotRow = $basket->products()->where('product_id',$product_id)->first()->pivot;
+            $quantity = $pivotRow->quantity + $count; 
+            if($quantity > 0){
+                $pivotRow->update(['quantity' => $quantity]); // обновить кол-во
+                $basket->touch();
+            } else {
+                $pivotRow->delete(); // если 0 товара в колрзине - удалить его     
+            }
+        }
+    }  
+    --------------------------- с использованием модели
+    в контроллере 
+    появился:
+        конструктор, 
+        метод получение или создания корзины (по куке)
+        свойство корзина
+    изменились методы 
+        добавить
+        плюс
+        минус
+        change - перенесен в модель
+
+    class BasketController extends Controller {
+
+    private $basket;  
+
+    public function __construct() {
+        $this->getBasket();
+    }
+
+    ...
+
+    /** Добавляет товар с идентификатором $id в корзину */
+    public function add(Request $request, $id) {
+        $quantity = $request->input('quantity') ?? 1;
+        $this->basket->increase($id, $quantity);
+        return back(); // возврат на предыдущую (т.е. на товар)
+    }
+
+    /** Увеличивает кол-во товара $id в корзине на единицу */
+    public function plus($id) {
+        $this->basket->increase($id);
+        return redirect()->route('basket.index'); // выполняем редирект обратно на страницу корзины
+    }
+
+    ...
+    /** Возвращает объект корзины; если не найден — создает новый */
+    private function getBasket() {
+        $basket_id = request()->cookie('basket_id');
+        if (!empty($basket_id)) {
+            try {
+                $this->basket = Basket::findOrFail($basket_id);
+            } catch (ModelNotFoundException $e) {
+                $this->basket = Basket::create();
+            }
+        } else {
+            $this->basket = Basket::create();
+        }
+        Cookie::queue('basket_id', $this->basket->id, 525600);
+    }
+}
+--- модели
+NB! вешался пока не отключил шифрование куки basket_id
+идея использования модели. в контроллере создается єкземпляр корзині 
+    private $basket;
+
+    public function __construct(){
+        $this->getBasket();
+    }
+
+    private function getBasket(){
+        $basket_id = request()->cookie('basket_id');
+        if(empty($basket_id)) {
+            $this->basket = Basket::create();
+        } else {
+            //$basket = Basket::findOrFail($basket_id);
+            $this->basket = Basket::find($basket_id);
+            if($this->basket == null){
+                $this->basket = Basket::create();
+            } else {
+            $this->basket->touch(); // обновдение updated_at
+            }
+        }
+       // dump($this->basket); die;
+        Cookie::queue('basket_id', $this->basket->id, 525600);
+    }
+     
+     --- код в контроллере ---
+     // пред версия в 5.txt
+      public function add(Request $request, $id) {
+        $quantity = $request->input('quantity') ?? 1;
+        $this->basket->increase($id, $quantity);
+        // выполняем редирект обратно на ту страницу,
+        // где была нажата кнопка «В корзину»
+        return back();
+    }
+
+       public function plus($id){   
+        $this->basket->increase($id);
+        return redirect()->route('basket.index');
+    }
+
+
+    public function minus($id){   
+        $this->basket->decrease($id);
+        return redirect()->route('basket.index');
+    }
+
+    --------------- в модели
+      /**
+     * Изменяет количество товара $id в корзине на величину $count;
+     * если товара еще нет в корзине — добавляет этот товар; $count
+     * может быть как положительным, так и отрицательным числом
+     */
+   public function change($id, $count = 0){
+       if($count == 0){
+           return;
+       }
+       if($this->products->contains($id)){
+            $pivotRow = $this->products()->where('product_id',$id)->first()->pivot;
+            $quantity = $pivotRow->quantity + $count;
+            if($quantity > 0){
+                $pivotRow->update(['quantity' => $quantity]);
+            } else {
+                $pivotRow->delete();
+            }    
+       } else {
+           if($count > 0){
+               $this->products()->attach($id,['quantity' => $count]);
+           }
+       }
+       $this->touch();
+   }

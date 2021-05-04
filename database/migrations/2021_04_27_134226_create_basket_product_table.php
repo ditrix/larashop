@@ -29,10 +29,7 @@ class CreateBasketProductTable extends Migration
            ->references('id')
            ->on('products')
            ->cascadeOnDelete();
-           $table->timestamps();
-
-
-
+       
         });
 
 
