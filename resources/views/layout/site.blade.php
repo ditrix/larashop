@@ -33,9 +33,6 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#">Контакты</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('basket.index') }}">Корзина</a>
-                </li>
             </ul>
             <!-- Этот блок расположен справа -->
             <form class="form-inline my-2 my-lg-0">
@@ -44,6 +41,12 @@
                 <button class="btn btn-outline-info my-2 my-sm-0"
                         type="submit">Искать</button>
             </form>
+            <!-- Этот блок расположен справа -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('basket.index') }}">Корзина</a>
+                </li>
+            </ul>
         </div>
     </nav>
 

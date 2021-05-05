@@ -77,6 +77,18 @@ class BasketController extends Controller
         $this->basket->decrease($id);
         return redirect()->route('basket.index');
     }
+
+    public function remove($id){
+        $this->basket->remove($id);
+        return redirect()->route('basket.index');
+    }
+
+    public function clear(){
+        $this->basket->delete();
+        return redirect()->route('basket.index');
+    }
+
+
 }
     /*
         код при пустой модели
