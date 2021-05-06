@@ -1,0 +1,151 @@
+(https://tokmakov.msk.ru/blog/item/563)
+Меню каталога товаров и популярные бренды в левой колонке
+-------------------------
+roots.blade  // для каталога
+@foreach($items as $item)
+    <li><a href="{{ route('catalog.category', ['slug' => $item->slug]) }}">{{ $item->name }}</a></li>
+@endforeach
+
+brands.blade // для брендов
+@foreach($items as $item)
+    <li><a href="{{ route('catalog.brand', ['slug' => $item->slug]) }}">{{ $item->name }}</a>
+        <span class="badge badge-dark float-right">{{ $item->products_count }}</span>
+    </li>
+@endforeach
+----------- получение этих данных
+class Category extends Model {
+    /* ... */
+    /** Возвращает список корневых категорий каталога товаров */
+    public static function roots() {
+        return self::where('parent_id', 0)->get();
+    }
+}
+class Brand extends Model {
+    /* ... */
+
+   // Возвращает список популярных брендов каталога товаров, пока просто  5 брендов с наибольшим кол-вом товаров
+    public static function popular() {
+        return self::withCount('products')->orderByDesc('products_count')->limit(5)->get();
+    }
+}
+----------- использование серис провайдеров
+статья (https://saribzhanov.ru/tehno/servis-provayderyi-v-laravel-dlya-samyih-malenkih/)
+основной концепт "дернуть откуда угодно"
+"Назначение провайдера это централизованно подключить и инициализировать необходимые компоненты приложения"
+
+// данные для левой колонки должны получать всегда. вместо того, чтобы городить контроллеры определяем поставщика контента
+#php artisan make:provider ComposerServiceProvider  
+
+для config/app.php
+
+return [
+    ...
+    'providers' => [
+        ...
+        App\Providers\ComposerServiceProvider::class,
+        ...
+    ]
+]
+
+в файле провайдера 
+App\Providers\ComposerServiceProvider.php
+...
+class ComposerServiceProvider extends ServiceProvider {
+  //...
+    public function boot() {
+        View::composer('layout.part.roots', function($view) {
+            $view->with(['items' => Category::roots()]);
+        });
+        View::composer('layout.part.brands', function($view) {
+            $view->with(['items' => Brand::popular()]);
+        });
+    }
+}
+--------- refactr подкаталоги
+получалка дочерних каталогов  модели Category
+  public function children() {
+        return $this->hasMany(Category::class, 'parent_id');
+  }
+соответственно шаблон для категорий
+...
+@foreach($items as $item)
+    <li>
+        <a href="{{ route('catalog.category', ['slug' => $item->slug]) }}">{{ $item->name }}</a>
+        @if ($item->children->count())
+                <ul>
+                @foreach($item->children as $child)
+                    <li>
+                        <a href="{{ route('catalog.category', ['slug' => $child->slug]) }}">
+                            {{ $child->name }}
+                        </a>
+                    </li>
+                @endforeach
+                </ul>
+            @endif
+    </li>
+@endforeach
+--------------------------- 
+refactr категории откр/закр javascript
+<div id="catalog-sidebar">
+    <ul>
+    @foreach($items as $item)
+        <li>
+            <a href="{{ route('catalog.category', ['slug' => $item->slug]) }}">{{ $item->name }}</a>
+      ...  // код с плюсиком или минусом  span + fas
+                <ul>
+                @foreach($item->children as $child)
+                    <li>
+                        <a href="{{ route('catalog.category', ['slug' => $child->slug]) }}">
+                            {{ $child->name }}
+                        </a>
+                    </li>
+                @endforeach
+                </ul>
+            @endisset
+        </li>
+    @endforeach
+    </ul>
+</div>
+---- javascript
+/public/js/site.js
+jQuery(document).ready(function($) {
+    $('#catalog-sidebar > ul ul').hide();
+    $('#catalog-sidebar .badge').on('click', function () {
+        var $badge = $(this);
+        var closed = $badge.siblings('ul') && !$badge.siblings('ul').is(':visible');
+
+        if (closed) {
+            $badge.siblings('ul').slideDown('normal', function () {
+                $badge.children('i').removeClass('fa-plus').addClass('fa-minus');
+            });
+        } else {
+            $badge.siblings('ul').slideUp('normal', function () {
+                $badge.children('i').removeClass('fa-minus').addClass('fa-plus');
+            });
+        }
+    });
+});
+
+---------- 
+ленивая & жадная загрузка
+при ленивой віполняются запросі
+1 список корневіх
+2 спиок каждой дочерней // по мере исльзования
+
+ /** Возвращает список корневых категорий каталога товаров */
+    public static function roots() {
+        return self::where('parent_id', 0)->get();
+    }
+
+    public function children() {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+
+
+
+если использовать жадную. получим сразу все категории
+
+public static function roots() {
+    return self::where('parent_id', 0)->with('children')->get();
+}

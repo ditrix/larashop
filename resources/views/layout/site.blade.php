@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.css') }}">
     <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/site.js') }}"></script>
 </head>
 <body>
 <div class="container">
@@ -52,10 +53,13 @@
 
     <div class="row">
         <div class="col-md-3">
-            <h4>Разделы каталога</h4>
+            @include('layout.part.roots')
+            @include('layout.part.brands')
+            
+            {{-- <h4>Разделы каталога</h4>
             <p>Здесь будут корневые разделы</p>
             <h4>Популярные бренды</h4>
-            <p>Здесь будут популярные бренды</p>
+            <p>Здесь будут популярные бренды</p> --}}
         </div>
         <div class="col-md-9">
             @yield('content')

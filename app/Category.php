@@ -16,4 +16,16 @@ class Category extends Model
     public function products() {
         return $this->hasMany(Product::class);
     }
+
+    // /** Возвращает список корневых категорий каталога товаров */
+    // public static function roots() {
+    //     return self::where('parent_id', 0)->get();
+    // }
+
+    public function children() {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+    public static function roots() {
+        return self::where('parent_id', 0)->with('children')->get();
+    }
 }
