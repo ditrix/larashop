@@ -23,3 +23,14 @@ Route::post('/basket/plus/{id}', 'BasketController@plus')->where('id', '[0-9]+')
 Route::post('/basket/minus/{id}', 'BasketController@minus')->where('id', '[0-9]+')->name('basket.minus');
 Route::post('/basket/clear', 'BasketController@clear')->name('basket.clear');
 Route::post('/basket/remove/{id}', 'BasketController@remove')->where('id', '[0-9]+')->name('basket.remove');
+
+Route::name('user.')->prefix('user')->group(function () {
+    Route::get('index', 'UserController@index')->name('index');
+    Auth::routes();
+});
+
+
+//Auth::routes();
+
+//Route::get('/home', 'HomeController@index')->name('home');
+

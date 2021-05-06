@@ -1,2 +1,65 @@
 (https://tokmakov.msk.ru/blog/item/564)
  Регистрация и аутентификация пользователей на сайте
+ локализация
+#php artisan ui:auth
+#npm install && npm run dev
+note: 
+добавился Auth::routes();
+что он насоздет можно посмотреть в vendor\laravel\ui\src\AuthRouteMethods
+-----
+добавить префикс user ко всем маршрутам  прим. \user\register  user.register
+Route::name('user.')->prefix('user')->group(function () {
+    Auth::routes();
+})
+
+----------- перевод на русский -----
+#composer require laravel-lang/lang:~7.0
+После этого нужно скопировать директорию vendor/laravel-lang/lang/src/ru и файл vendor/laravel-lang/lang/json/ru.json в директорию resources/lang
+(не забыли поменять локаль в config/app.php)
+-------------------------
+натравливаем сгенерированіне блейды на наш лейоут
+прим.
+extends('layout.site')
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">{{ __('Register') }}</div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ route('user.register') }}">
+                                @csrf
+...
+------------ какбынет ))
+д.б. по маршруту user/undex/
+для него буде и в контроллере отдельн метод городить
+Route::name('user.')->prefix('user')->group(function () {
+    Route::get('index', 'UserController@index')->name('index');   // <<< отоно выбивается из общего стайла
+    Auth::routes();
+});
+Контроллер UserController удобнее всего сделать из HomeController — все экшены уже защищены auth-посредником.
+
+--- плашка для мессажей ---
+пример
+@if ($message = Session::get('success'))
+<div class="alert alert-success alert-dismissible mt-4" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Закрыть">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    {{ $message }}
+</div>
+@endif
+
+
+NB! 
+после добавления кода вида
+protected function authenticated(Request $request, $user) {
+    return redirect()->route('user.index')->with('success', 'Вы успешно вошли в личный кабинет');
+}
+
+убивался с ошибкой
+Argument 1 passed to App\Http\Controllers\Auth\LoginController::authenticated() must be an instance...
+
+решается добавлением use \Illuminate\Http\Request;

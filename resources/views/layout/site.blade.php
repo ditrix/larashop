@@ -42,11 +42,24 @@
                 <button class="btn btn-outline-info my-2 my-sm-0"
                         type="submit">Искать</button>
             </form>
-            <!-- Этот блок расположен справа -->
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('basket.index') }}">Корзина</a>
                 </li>
+                @guest
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('user.login') }}">Войти</a>
+                    </li>
+                    @if (Route::has('user.register'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('user.register') }}">Регистрация</a>
+                        </li>
+                    @endif
+                @else
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('user.index') }}">Личный кабинет</a>
+                    </li>
+                @endif
             </ul>
         </div>
     </nav>
@@ -62,6 +75,14 @@
             <p>Здесь будут популярные бренды</p> --}}
         </div>
         <div class="col-md-9">
+            @if ($message = Session::get('success'))
+            <div class="alert alert-success alert-dismissible mt-4" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Закрыть">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                {{ $message }}
+            </div>
+            @endif
             @yield('content')
         </div>
     </div>
