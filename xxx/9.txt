@@ -1,9 +1,9 @@
 (https://tokmakov.msk.ru/blog/item/565)
-1. перенаправление с дефолтного на свое
-2. миграции - добавить поле
-
 
 Панель управления сайтом, авторизация администратора
+
+
+1 миграции - добавить поле
 
 ================== Администратор магазина ==============================
 добавление поля users.admin
@@ -20,6 +20,71 @@ public function down() {
         $table->dropColumn('admin');
     });
 }
+
+
 ======================= создать контроллер для панели
 #php artisan make:controller Admin\AdminController --invokable //invokable генертироать контроллер одного действия
+
+контроллер создан в подкаталоге. -> в роутах указываем пространство имен (Admin в данному випадку)
+варианті
+
+// это первый вариант указания пространства имен (относительно дефолтного App\Http\Controllers).
+Route::name('admin.')->prefix('admin')->group(function () {
+    Route::get('index', 'Admin\IndexController')->name('index');
+});
+
+// это второй вариант указания пространства имен (относительно дефолтного App\Http\Controllers).
+Route::namespace('Admin')->name('admin.')->prefix('admin')->group(function () {
+    Route::get('index', 'IndexController')->name('index');
+});
+----- 
+в контроллере зовем два мидлвара
+    $this->middleware('auth');
+    $this->middleware('admin');  // проверяет на admin права пользователя, если нет - заворачивает на 404
+
+
+т.е. создадим мидлвар admin.  заодно укажем его  в Kernel
+protected $routeMiddleware = [
+    'auth' => \App\Http\Middleware\Authenticate::class,
+    'admin' => \App\Http\Middleware\Administrator::class,
+        ...
+создаем мидлвар
+#php artisan make:middleware Administrator
+
+...
+  public function handle($request, Closure $next)
+    {
+        // если пользователь не админ -> 404
+        if ( ! auth()->user()->admin) {
+            abort(404);
+        }
+        return $next($request);
+
+-------------- ради чего все. разделить кабинеты
+юзер -> user.index
+admin -> admin.index 
+используем LoginController, для блейдов также
+views/admin.blade.php
+views/admin/index.blade.php
+
+----- несколько контроллеров в пространсте Admin
+чтобы для каждого конструктора не указывать 
+$this->middleware('auth');
+$this->middleware('admin');
+посредников можно перечислять в роутах
+
+// первый способ добавления посредников
+Route::namespace('Admin')->name('admin.')->prefix('admin')->middleware('auth', 'admin')->group(function () {
+    Route::get('index', 'IndexController')->name('index');
+});
+
+// второй способ добавления посредников
+Route::group([
+    'as' => 'admin.', // имя маршрута, например admin.index
+    'prefix' => 'admin', // префикс маршрута, например admin/index
+    'namespace' => 'Admin', // пространство имен контроллера
+    'middleware' => ['auth', 'admin'] // один или несколько посредников
+], function () {
+    Route::get('index', 'IndexController')->name('index');
+});
 

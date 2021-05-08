@@ -30,6 +30,29 @@ Route::name('user.')->prefix('user')->group(function () {
 });
 
 
+
+// Route::name('admin.')->prefix('admin')->group(function () {
+//     Route::get('index', 'Admin\IndexController')->name('index');
+// });
+
+// это второй вариант указания пространства имен
+// Route::namespace('Admin')->name('admin.')->prefix('admin')->group(function () {
+//     Route::get('index', 'IndexController')->name('index');
+// });
+
+
+
+// второй способ добавления посредников
+Route::group([
+    'as' => 'admin.', // имя маршрута, например admin.index
+    'prefix' => 'admin', // префикс маршрута, например admin/index
+    'namespace' => 'Admin', // пространство имен контроллера
+    'middleware' => ['auth', 'admin'] // один или несколько посредников
+], function () {
+    Route::get('index', 'IndexController')->name('index');
+});
+
+
 //Auth::routes();
 
 //Route::get('/home', 'HomeController@index')->name('home');
