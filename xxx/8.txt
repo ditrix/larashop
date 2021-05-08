@@ -63,3 +63,13 @@ protected function authenticated(Request $request, $user) {
 Argument 1 passed to App\Http\Controllers\Auth\LoginController::authenticated() must be an instance...
 
 решается добавлением use \Illuminate\Http\Request;
+
+
+после логина - залогиненого редиректит не туда.
+
+для удаления редиректа из коробки залогиненій=>/user/login=>/user/home/=>404
+отключаем редирект в мидлваре RedirectIfAuthenticated
+if (Auth::guard($guard)->check()) {
+    // return redirect(RouteServiceProvider::HOME);  -----------
+    return redirect->route('user.index');  // ++++++++++++++
+}
