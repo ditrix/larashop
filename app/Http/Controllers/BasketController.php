@@ -12,25 +12,26 @@ class BasketController extends Controller
     private $basket;
 
     public function __construct(){
-        $this->getBasket();
+       $this->basket =  Basket::getBasket();
+
     }
 
-    private function getBasket(){
-        $basket_id = request()->cookie('basket_id');
-        if(empty($basket_id)) {
-            $this->basket = Basket::create();
-        } else {
-            //$basket = Basket::findOrFail($basket_id);
-            $this->basket = Basket::find($basket_id);
-            if($this->basket == null){
-                $this->basket = Basket::create();
-            } else {
-            $this->basket->touch(); // обновдение updated_at
-            }
-        }
-       // dump($this->basket); die;
-        Cookie::queue('basket_id', $this->basket->id, 525600);
-    }
+    // private function _getBasket(){
+    //     $basket_id = request()->cookie('basket_id');
+    //     if(empty($basket_id)) {
+    //         $this->basket = Basket::create();
+    //     } else {
+    //         //$basket = Basket::findOrFail($basket_id);
+    //         $this->basket = Basket::find($basket_id);
+    //         if($this->basket == null){
+    //             $this->basket = Basket::create();
+    //         } else {
+    //         $this->basket->touch(); // обновдение updated_at
+    //         }
+    //     }
+    //    // dump($this->basket); die;
+    //     Cookie::queue('basket_id', $this->basket->id, 525600);
+    // }
     
     public function index(Request $request){
 

@@ -24,8 +24,13 @@ public function down() {
 
 ======================= создать контроллер для панели
 #php artisan make:controller Admin\AdminController --invokable //invokable генертироать контроллер одного действия
-
-контроллер создан в подкаталоге. -> в роутах указываем пространство имен (Admin в данному випадку)
+...
+  public function __invoke(Request $request)
+    {
+       return view('admin.index');
+    }
+...
+контроллер создан в подкаталоге Admin -> в роутах указываем пространство имен (Admin в данному випадку)
 варианті
 
 // это первый вариант указания пространства имен (относительно дефолтного App\Http\Controllers).
@@ -75,7 +80,7 @@ $this->middleware('admin');
 
 // первый способ добавления посредников
 Route::namespace('Admin')->name('admin.')->prefix('admin')->middleware('auth', 'admin')->group(function () {
-    Route::get('index', 'IndexController')->name('index');
+    Route::get('index', 'IndexController')->name('index');  // пошел обічній указатель роута
 });
 
 // второй способ добавления посредников
@@ -85,6 +90,37 @@ Route::group([
     'namespace' => 'Admin', // пространство имен контроллера
     'middleware' => ['auth', 'admin'] // один или несколько посредников
 ], function () {
-    Route::get('index', 'IndexController')->name('index');
+    Route::get('index', 'IndexController')->name('index');   // пошел обічній указатель роута
 });
+------------------------------------ рефактор корзині
 
+работаем с ComposerServiceProvider  (см 7.txt) (состояние чего-то доступно не только из родного контроллера)
+передаем переменную $positions (зависит от состояния корзины), в лейоут site
+     public function boot() {
+     ...
+        View::composer('layout.site', function($view) {
+            $view->with(['positions' => Basket::getBasket()->products->count()]);
+        });
+    }
+    
+    +++++ добавить  Basket::getBasket()
+    ----- убрать    BasketController::getBasket()   // вызывать в конструторе
+
+class Basket ...
+
+    public static function getBasket(){
+    $basket_id = request()->cookie('basket_id');
+
+    if(!empty($basket_id)){
+        $basket = Basket::find($basket_id);
+        if($basket == null){
+            $basket = Basket::create();
+        }
+    } else {
+        $basket = Basket::create();
+    }
+
+    Cookie::queue('basket_id', $basket->id, 525600);
+    return $basket;
+    }
+================== 

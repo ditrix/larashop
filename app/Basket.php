@@ -1,7 +1,7 @@
 <?php
 
 namespace App;
-
+use Cookie;
 use Illuminate\Database\Eloquent\Model;
 
 class Basket extends Model
@@ -55,4 +55,22 @@ class Basket extends Model
     // обновляем поле `updated_at` таблицы `baskets`
         $this->touch();
    }
+
+   public static function getBasket(){
+        $basket_id = request()->cookie('basket_id');
+
+        if(!empty($basket_id)){
+            $basket = Basket::find($basket_id);
+            if($basket == null){
+                $basket = Basket::create();
+            }
+        } else {
+            $basket = Basket::create();
+        }
+
+        Cookie::queue('basket_id', $basket->id, 525600);
+        return $basket;
+    }
+
+
 }
