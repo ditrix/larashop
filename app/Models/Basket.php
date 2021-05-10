@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 use Cookie;
 use Illuminate\Database\Eloquent\Model;
 
@@ -72,5 +72,13 @@ class Basket extends Model
         return $basket;
     }
 
+      /* расчитівается стоимость корзині */
+      public function getAmount() {
+        $amount = 0.0;
+        foreach ($this->products as $product) {
+            $amount = $amount + $product->price * $product->pivot->quantity;
+        }
+        return $amount;
+    }
 
 }

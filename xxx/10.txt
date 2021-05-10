@@ -1,2 +1,128 @@
 (https://tokmakov.msk.ru/blog/item/566)
 работа с заказом (оформление)
+модели (связанные таблиці) 
+1 заказы  #php artisan make:model Models/Order -m
+  Schema::create('orders', function (Blueprint $table) {
+    $table->id();
+    ...
+    $table->decimal('amount', 10, 2)->unsigned();
+    $table->bigInteger('user_id')->unsigned()->nullable(); // NB! ордерз ссылаются на юзерз
+
+    // внешний ключ, ссылается на поле id таблицы users
+    $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+    ...
+
+2. заказаные товары  #php artisan make:model Models/OrderItem -m    
+Schema::create('order_items', function (Blueprint $table) {
+    $table->id();
+    $table->bigInteger('order_id')->unsigned();                   // указатель на заказ              
+    $table->bigInteger('product_id')->unsigned()->nullable();     // укзатель на продукт
+    ...
+    $table->decimal('price', 10, 2)->unsigned();
+    $table->tinyInteger('quantity')->unsigned()->default(1);
+    $table->decimal('cost', 10, 2)->unsigned();
+
+    // внешний ключ, ссылается на поле id таблицы orders
+    $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
+    
+    // внешний ключ, ссылается на поле id таблицы products
+    $table->foreign('product_id')->references('id')->on('products')->nullOnDelete();
+
+NB! начинаем модели раскидівать по подкаталогам ( вернее переместили в  Мodels ) 
+нужно менять код контроллеров, провайдеров, namespace в самих моделях, в cfg файлах (ex auth)
+
+чистка кеша (после пемещения моделей)
+# php artisan cache:clear  // Очистка кэша приложения
+# php artisan route:clear  // Очистка кэша маршрутов
+# php artisan view:clear   // Очистка кэша шаблонов
+# php artisan config:clear // Очистка кэша конфигурации
+
+
+Route::post('/basket/saveorder', 'BasketController@saveOrder')->name('basket.saveorder');
+
+order -> hasmany -> order_items
+class Order ...
+    public function items() {
+        return $this->hasMany(OrderItem::class);
+    }
+
+class OrderItem
+    public function product() {
+        return $this->belongsTo(Product::class);
+}    
+
+!!! сплывает ошибка типо "нет created_at, updated_at.
+указіаем игнор єтого дела в 
+class OrderItem extends Model {
+    public $timestamps = false;  // ....
+}   
+изменения в Basket и BasketController (fck!)
+Basket
+...
+   /* расчитівается стоимость корзині */
+      public function getAmount() {
+        $amount = 0.0;
+        foreach ($this->products as $product) {
+            $amount = $amount + $product->price * $product->pivot->quantity;
+        }
+        return $amount;
+    }
+
+BasketController     
+...
+ public function saveOrder(Request $request){
+         // проверяем данные формы оформления
+         $this->validate($request, [
+            'name' => 'required|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|max:255',
+            'address' => 'required|max:255',
+        ]);
+
+    // валидация пройдена, сохраняем заказ
+    $basket = Basket::getBasket();
+    $user_id = auth()->check() ? auth()->user()->id : null;
+
+    // добавляем все из реквеста + доп, вічисляемое. напр общ сумма в корзине
+    $order = Order::create( $request->all() + ['amount' => $basket->getAmount(), 'user_id' => $user_id]); // fck!fck!
+
+    // насоздаем продуктов  в order_items
+    foreach ($basket->products as $product) {
+        $order->items()->create([ 
+            'product_id' => $product->id,
+            'name' => $product->name,
+            'price' => $product->price,
+            'quantity' => $product->pivot->quantity,
+            'cost' => $product->price * $product->pivot->quantity,
+            ]);
+        }
+
+        // уничтожаем корзину
+        $basket->delete();
+
+        return redirect()->route('basket.success')->with('success', 'Ваш заказ успешно размещен');        
+    }    
+
+        /**
+     * Сообщение об успешном оформлении заказа
+     */
+    public function success(Request $request) {
+        if ($request->session()->exists('order_id')) {
+            // сюда покупатель попадает сразу после успешного оформления заказа
+            $order_id = $request->session()->pull('order_id');
+            $order = Order::findOrFail($order_id);
+            return view('basket.success', compact('order'));
+        } else {
+            // если покупатель попал сюда случайно, не после оформления заказа,
+            // ему здесь делать нечего — отправляем на страницу корзины
+            return redirect()->route('basket.index');
+        }
+    }
+
+    //  TODO редирект на success blade
+
+    новое в роутах
+    
+Route::post('/basket/saveorder','BasketController@saveOrder')->name('basket.saveorder');
+
+Route::get('/basket/success', 'BasketController@success')->name('basket.success');

@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Brand;
-use App\Product;
-use App\Category;
+use App\Models\Brand;
+use App\Models\Product;
+use App\Models\Category;
 
 use Illuminate\Http\Request;
 

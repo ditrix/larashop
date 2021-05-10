@@ -16,7 +16,9 @@ Route::get('/catalog/brand/{slug}','CatalogController@brand')->name('catalog.bra
 Route::get('/catalog/product/{slug}','CatalogController@product')->name('catalog.product');
 
 Route::get('/basket/index','BasketController@index')->name('basket.index');
+
 Route::get('/basket/checkout','BasketController@checkout')->name('basket.checkout');
+
 
 Route::post('/basket/add/{id}', 'BasketController@add')->where('id', '[0-9]+')->name('basket.add');
 Route::post('/basket/plus/{id}', 'BasketController@plus')->where('id', '[0-9]+')->name('basket.plus');
@@ -29,7 +31,9 @@ Route::name('user.')->prefix('user')->group(function () {
     Auth::routes();
 });
 
+Route::post('/basket/saveorder','BasketController@saveOrder')->name('basket.saveorder');
 
+Route::get('/basket/success', 'BasketController@success')->name('basket.success');
 
 // Route::name('admin.')->prefix('admin')->group(function () {
 //     Route::get('index', 'Admin\IndexController')->name('index');

@@ -2,3 +2,14 @@
 #composer create-project --prefer-dist laravel/laravel blog "5.8.*"
 #composer create-project --prefer-dist laravel/laravel blog "6.*"
 #composer create-project --prefer-dist laravel/laravel:^7.0 blog
+
+общие полезности
+
+чистка кеша (после пемещения моделей)
+> php artisan cache:clear # Очистка кэша приложения
+> php artisan route:clear # Очистка кэша маршрутов
+> php artisan view:clear # Очистка кэша шаблонов
+> php artisan config:clear # Очистка кэша конфигурации
+
+снипеті для vsc
+https://devdojo.com/bobbyiliev/8-awesome-vs-code-extensions-for-laravel-developers#_6-laravel-goto-controller
