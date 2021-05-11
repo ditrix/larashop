@@ -104,10 +104,8 @@ class BasketController extends Controller
         // уничтожаем корзину
         $basket->delete();
 
-        return redirect()
-            ->route('basket.success')
-            ->with('success', 'Ваш заказ успешно размещен');        
-    }    
+        return redirect()->route('basket.success')->with('order_id', $order->id);
+    }
       /**
      * Сообщение об успешном оформлении заказа
      */

@@ -6,12 +6,19 @@
         @php
          $basketCost = 0;      
         @endphp
-        <form action="{{ route('basket.clear') }}" method="post" class="text-right">
-            @csrf
-            <button type="submit" class="btn btn-outline-danger mb-4 mt-0">
-                Очистить корзину
-            </button>
-        </form>
+        <div class="row">
+            <div class="col-6">
+                <a class="btn btn-outline-success mb-4 mt-0" href="{{ route('basket.checkout') }}">Оформить заказ</a>
+            </div>
+            <div class="col-6">
+                <form action="{{ route('basket.clear') }}" method="post" class="text-right">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger mb-4 mt-0">
+                        Очистить корзину
+                    </button>
+                </form>
+            </div>
+        </div>
         <table class="table table-bordered">
             <tr>
                 <th>№</th>

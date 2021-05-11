@@ -103,9 +103,9 @@ BasketController
         return redirect()->route('basket.success')->with('success', 'Ваш заказ успешно размещен');        
     }    
 
-        /**
-     * Сообщение об успешном оформлении заказа
-     */
+/**
+ * Сообщение об успешном оформлении заказа
+ */
     public function success(Request $request) {
         if ($request->session()->exists('order_id')) {
             // сюда покупатель попадает сразу после успешного оформления заказа
