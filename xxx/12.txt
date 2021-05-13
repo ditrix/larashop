@@ -1,0 +1,2 @@
+(https://tokmakov.msk.ru/blog/item/568) CRUD категрий 2
+create, edit

@@ -8,4 +8,5 @@
 [shop-8 Auth](https://tokmakov.msk.ru/blog/item/564)
 [shop-9 Панель администратора](https://tokmakov.msk.ru/blog/item/565)
 [shop-10 Orders](https://tokmakov.msk.ru/blog/item/566)
-[shop-11 CRUD Catalog 1](https://tokmakov.msk.ru/blog/item/567)
+[shop-11 CRUD Catalog 1 (show, index, delete)](https://tokmakov.msk.ru/blog/item/567)
+[shop-12 CRUD Catalog 2 (create, edit)](https://tokmakov.msk.ru/blog/item/568) 
