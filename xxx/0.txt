@@ -13,3 +13,18 @@
 
 снипеті для vsc
 https://devdojo.com/bobbyiliev/8-awesome-vs-code-extensions-for-laravel-developers#_6-laravel-goto-controller
+
+создавалка 8 основых маршрутов  одной строкой
+Route::resource('item', 'ItemController');
+/*
+Тип        URI              Действие  Имя маршрута
+--------------------------------------------------
+GET        /item            index     item.index
+GET        /item/create     create    item.create
+POST       /item            store     item.store
+GET        /item/{id}       show      item.show
+GET        /item/{id}/edit  edit      item.edit
+PUT/PATCH  /item/{id}       update    item.update
+DELETE     /item/{id}       destroy   item.destroy
+*/
+php artisan route:list

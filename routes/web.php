@@ -43,6 +43,17 @@ Route::get('/basket/success', 'BasketController@success')->name('basket.success'
 // Route::namespace('Admin')->name('admin.')->prefix('admin')->group(function () {
 //     Route::get('index', 'IndexController')->name('index');
 // });
+Route::group([
+    'as' => 'admin.', // имя маршрута, например admin.index
+    'prefix' => 'admin', // префикс маршрута, например admin/index
+    'namespace' => 'Admin', // пространство имен контроллера
+    'middleware' => ['auth', 'admin'] // один или несколько посредников
+], function () {
+    // главная страница панели управления
+    Route::get('index', 'IndexController')->name('index');
+    // CRUD-операции над категориями каталога
+    Route::resource('category', 'CategoryController');
+});
 
 
 

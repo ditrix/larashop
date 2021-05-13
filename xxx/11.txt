@@ -1,2 +1,143 @@
-(https://tokmakov.msk.ru/blog/item/567)
+(https://tokmakov.msk.ru/blog/item/567)  CRUD Catalog - 1
 панель управления
+CRUD для таблицы саморекурсивной
+Category в данном случае 
+исключительно в целях нумерации строки всплывет стандартная блейд-переменная loop
+
+> php artisan make:controller Admin/CategoryController --resource --model=Models/Category
+сразу писівает код модели в создаваемій контроллер
+стандартній crud не проканает. нужно указівать мидлварі и про-ва имен (см 9.txt)
+Route::group([
+    'as' => 'admin.', // имя маршрута, например admin.index
+    'prefix' => 'admin', // префикс маршрута, например admin/index
+    'namespace' => 'Admin', // пространство имен контроллера
+    'middleware' => ['auth', 'admin'] // один или несколько посредников
+], function () {
+    // главная страница панели управления
+    Route::get('index', 'IndexController')->name('index');
+    // CRUD-операции над категориями каталога
+    Route::resource('category', 'CategoryController');
+});
+
+php artisan route:list --name=category 
+
+| GET|HEAD  | admin/category                 | admin.category.index   | App\Http\Controllers\Admin\CategoryController@index   |
+| POST      | admin/category                 | admin.category.store   | App\Http\Controllers\Admin\CategoryController@store   |
+| GET|HEAD  | admin/category/create          | admin.category.create  | App\Http\Controllers\Admin\CategoryController@create  |
+| GET|HEAD  | admin/category/{category}      | admin.category.show    | App\Http\Controllers\Admin\CategoryController@show    |
+| PUT|PATCH | admin/category/{category}      | admin.category.update  | App\Http\Controllers\Admin\CategoryController@update  |
+| DELETE    | admin/category/{category}      | admin.category.destroy | App\Http\Controllers\Admin\CategoryController@destroy |
+| GET|HEAD  | admin/category/{category}/edit | admin.category.edit    | App\Http\Controllers\Admin\CategoryController@edit    |
+| GET|HEAD  | catalog/category/{slug}        | catalog.category       | App\Http\Controllers\CatalogController@category       |
+
+...
+    public function index()
+    {
+        $roots = Category::roots();
+        return view('admin.category.index', compact('roots'));
+    }
+ 
+для вівода категорий используется "рекурсивній візов блейда", в зависимости от 
+Category::roots() вернет и children для каждого рута
+код в модели Category
+   public function children() {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+    //  LOOK HERE!
+    public static function roots() {
+        return self::where('parent_id', 0)->with('children')->get();
+    }
+
+views/admin/category/index.blade.php
+@extends('layout.admin')
+
+@section('content')
+    <h1>Все категории</h1>
+    <table class="table table-bordered">
+        <tr>
+            <th width="30%">Наименование</th>
+            <th width="65%">Описание</th>
+            <th><i class="fas fa-edit"></i></th>
+            <th><i class="fas fa-trash-alt"></i></th>
+        </tr>
+        @include('admin.category.part.tree', ['items' => $roots, 'level' => -1])
+    </table>
+@endsection
+
+-------------- аккуратно ща будет рекурсия......
+views/admin/category/part/tree.blade.php
+@if (count($items))
+    @php
+        $level++;
+    @endphp
+    @foreach ($items as $item)
+        <tr>
+            <td>
+                // в зависимости от level 
+                @if ($level)                     
+                // добавляем ему минусов к названию   
+                    {{ str_repeat('—', $level) }}   
+                @endif
+                // еще и bold прицепим
+                <a href="{{ route('admin.category.show', ['category' => $item->id]) }}"
+                   style="font-weight:@if($level) normal @else bold @endif">
+                    {{ $item->name }}
+                </a>
+            </td>
+            <td>{{ iconv_substr($item->content, 0, 150) }}</td>
+        </tr>
+
+        
+        @if ($item->children->count())
+         // подключим детку только по необходимости (в нем и level увеличится)
+            @include('admin.category.part.tree', ['items' => $item->children, 'level' => $level])
+        @endif
+    @endforeach
+@endif
+------------------------- show
+показ текущей и, если есть, дочерних
+
+public function show(Category $category)
+{
+    return view('admin.category.show', compact('category'));
+}
+
+...
+        <div class="col-md-6">
+            <p><strong>Название:</strong> {{ $category->name }}</p>
+            <p><strong>Краткое описание</strong></p>
+            <p>{{ $category->content }}</p>
+        </div>
+  ...      
+    @if ($category->children->count())
+        ...
+        @foreach ($category->children as $child)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>
+                        <a href="{{ route('admin.category.show', ['category' => $child->id]) }}">
+                            {{ $child->name }}
+                        </a>
+                    </td>
+                    <td>{{ $child->slug }}</td>
+        @endforeach    
+        @else
+          <p>Нет дочерних категорий</p>
+    @endif
+------------------------------ удаление
+в контроллере перед удалением проверяем
+    public function destroy(Category $category) {
+        if ($category->children->count()) {
+            $errors[] = 'Нельзя удалить категорию с дочерними категориями';
+        }
+        if ($category->products->count()) {
+            $errors[] = 'Нельзя удалить категорию, которая содержит товары';
+        }
+        if (!empty($errors)) {
+            return back()->withErrors($errors);
+        }
+        $category->delete();
+        return redirect()
+            ->route('admin.category.index')
+            ->with('success', 'Категория каталога успешно удалена');
+    } 
