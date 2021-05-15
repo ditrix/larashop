@@ -26,7 +26,9 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        // для возможности выбора родителя
+        $parents = Category::roots();
+        return view('admin.category.create', compact('parents'));
     }
 
     /**
@@ -59,7 +61,9 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        // для возможности выбора родителя
+        $parents = Category::roots();
+        return view('admin.category.edit', compact('category', 'parents'));
     }
 
     /**

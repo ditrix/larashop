@@ -1,2 +1,142 @@
 (https://tokmakov.msk.ru/blog/item/568) CRUD категрий 2
 create, edit
+    public function create() {
+      // для возможности выбора родителя
+        $parents = Category::roots();
+        return view('admin.category.create', compact('parents'));
+    }
+    /* ... */
+    public function edit(Category $category) {
+        // для возможности выбора родителя
+        $parents = Category::roots();
+        return view('admin.category.edit', compact('category', 'parents'));
+    }
+в єтот раз игры будут с блейдами...    
+ create.blade.php и edit.blade.php.
+ ---------------------------------------create
+ ....
+<form method="post" action="{{ route('admin.category.store') }}" enctype="multipart/form-data">
+    @csrf
+    <input type="text" name="name" placeholder="Наименование" maxlength="100" value="{{ old('name') ?? '' }}">
+    <input type="text" name="slug" placeholder="ЧПУ (на англ.)" maxlength="100" value="{{ old('slug') ?? '' }}">
+    <select name="parent_id" class="form-control" title="Родитель">
+        <option value="0">Без родителя</option>
+        @foreach($parents as $parent)
+        <option value="{{ $parent->id }}">{{ $parent->name }}</option>  
+        @if ($parent->children->count())                 
+ 
+        {/* ///////////////////////////////////////////////////////////////  
+                // КРОМЕ РОДИТЕЛЯ ЕСТЬ ВОЗМОЖНОСТЬ ВЫБРАТЬ ЕГО ПОТОМКОВ      //
+                /////////////////////////////////////////////////////////////// */}
+            @foreach($parent->children as $child)                        
+                <option value="{{ $child->id }}">— {{ $child->name }}</option>
+            @endforeach
+
+            {/* //////////////////////////////////////////////////////////////////            
+                // Т.Е. ЕСТЬ ВОЗМОЖНОСТЬ ПОЛУЧИТЬ ЛЮБОЙ УРОВЕНЬ ВЛОЖЕННОСТИ     //       
+                ////////////////////////////////////////////////////////////////// */}
+                        
+        @endif
+        @endforeach
+    </select>
+    
+    <textarea class="form-control" name="content" placeholder="Краткое описание"
+                      maxlength="200" rows="3">{{ old('content') ?? '' }}</textarea>
+    <input type="file" class="form-control-file" name="image" accept="image/png, image/jpeg">
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+    ---------------------------------------------
+---------------------------------------EDIT
+ ....
+ <form method="post" enctype="multipart/form-data" 
+    action="{{ route('admin.category.update', ['category' => $category->id]) }}">
+    
+    {/*///////////////////////////////////////////
+    //       явно указываем метод put
+    /////////////////////////////////////////////*/}
+        @method('PUT')
+        @csrf
+        
+    <input type="text" name="name" placeholder="Наименование" value="{{ old('name') ?? $category->name }}">
+    <input type="text" name="title" placeholder="ЧПУ (на англ.)" value="{{ old('slug') ?? $category->slug }}">
+    <select name="parent_id" class="form-control" title="Родитель"> 
+        <option value="0">Без родителя</option>
+        @if (count($parents))
+        {*///////////////////////////////////////////////////////
+        //  ДЛЯ ВОЗМОЖНОСТИ ВІБОРА УЖЕ ИСПОЛЬЗУЕМ PART
+        /////////////////////////////////////////////////////////*}
+            @include('admin.category.part.branch', ['items' => $parents, 'level' => -1])
+        @endif
+        </select>
+        
+        <textarea name="content" placeholder="Краткое описание" maxlength="200" rows="3">
+            {{ old('content') ?? $category->content }}
+        </textarea>
+        <input type="file"  name="image" accept="image/png, image/jpeg">
+        @isset($category->image)
+        <input type="checkbox" class="form-check-input" name="remove" id="remove">
+        <label class="form-check-label" for="remove">Удалить загруженное изображение</label>
+        @endisset
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+ 
+ /* ВНЕШН ПОДКЛЮЧ PART БУДЕТ, ЗАРАЗА, РЕКУРСИВНІМ */
+@php 
+  $level++    /* ОПРЕДЕЛИТ КОЛ-ВО ПРОБЕЛОВ НА ОТСТУП В ДЕТЯХ */ 
+@endphp  
+@foreach($items as $item)
+    <option value="{{ $item->id }}">
+        @if ($level) {!! str_repeat('&nbsp;&nbsp;&nbsp;', $level) !!}  @endif {{ $item->name }}
+    </option>
+    
+    /*
+    *  ЕСЛИ У ТЕКУЩЕГО ДАТАСЕТА ЕСТЬ ДЕТИ - ПОЛДКЛЮЧИМ ЕГО ЖЕ И ДАТАСЕТОМ БУДУТ ДЕТИ
+    */
+    @if ($item->children->count())
+        @include('admin.category.part.branch', ['items' => $item->children, 'level' => $level])
+    @endif
+@endforeach
+
+----------------- оптимизация шаблонов (сделать одну <form>)
+
+   edit <------+     +-------> create
+               |     |
+          +-->part.form     // содержит виджеті input 
+          | 
+     +-->part.branch --+    // содержит дерево родительских категорий   @include('admin.category.part.branch', ['items' => $parents, 'level' => -1])
+     |                 |
+     +-----------------+
+
+напр  
+1. edit.blade
+    <form method="post" enctype="multipart/form-data"
+          action="{{ route('admin.category.update', ['category' => $category->id]) }}">
+        @method('PUT')
+        @include('admin.category.part.form')
+    </form>
+
+
+2. form.blade (общ кусок кода для разн форм)
+
+<input name="name" placeholder="Наименование" value="{{ old('name') ?? $category->name ?? '' }}">
+....
+{/*  ВСТАВКА ВЫБОРКИ КАТЕГОРИЙ*/}
+<select name="parent_id" class="form-control" title="Родитель">
+    <option value="0">Без родителя</option>
+        @if (count($parents))
+            @include('admin.category.part.branch', ['items' => $parents, 'level' => -1])
+        @endif
+</select>        
+-------------------------------------
+
+3. branch.blade
+@foreach($items as $item)
+    <option value="{{ $item->id }}">
+        @if ($level) {!! str_repeat('&nbsp;&nbsp;&nbsp;', $level) !!}  @endif {{ $item->name }}
+    </option>
+    @if ($item->children->count())
+        @include('admin.category.part.branch', ['items' => $item->children, 'level' => $level])
+    @endif
+@endforeach
+    
+
