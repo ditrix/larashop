@@ -1,7 +1,14 @@
 @extends('layout.admin')
 
 @section('content')
-    <h1>Все категории</h1>
+    <div class="row">
+        <div class="col-6">
+            <h1>Все категории</h1>
+        </div>
+        <div class="col-6">
+            <a class="btn btn-primary" href="{{ route('admin.category.create') }}">Новая категория</a>
+        </div>
+    </div>
     <table class="table table-bordered">
         <tr>
             <th width="30%">Наименование</th>

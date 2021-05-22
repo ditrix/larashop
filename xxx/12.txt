@@ -11,6 +11,56 @@ create, edit
         $parents = Category::roots();
         return view('admin.category.edit', compact('category', 'parents'));
     }
+
+в модели  class Category extends Model
+
+protected $fillable = ['parent_id','name', ....]; //для сохранения и обновления нужно будет указівать поля $fillable
+
+в контроллере
+class CategoryController extends Controller
+ // для создания новой
+ public function store(Request $request) {
+        // проверяем данные формы создания категории
+        $this->validate($request, [
+            'parent_id' => 'integer',
+            'name' => 'required|max:100',
+            'slug' => 'required|max:100|unique:categories,slug|alpha_dash',
+            'image' => 'mimes:jpeg,jpg,png|max:5000'
+        ]);
+        // проверка пройдена, сохраняем категорию
+        $category = Category::create($request->all());
+        return redirect()
+            ->route('admin.category.show', ['category' => $category->id])
+            ->with('success', 'Новая категория успешно создана');
+    }
+
+// для обновления существующей
+ public function update(Request $request, Category $category) {
+        // проверяем данные формы редактирования категории
+        $id = $category->id;
+        $this->validate($request, [
+            'parent_id' => 'integer',
+            'name' => 'required|max:100',
+            /*
+             * Проверка на уникальность slug, исключая эту категорию по идентифкатору:
+             * 1. categories — таблица базы данных, где проверяется уникальность
+             * 2. slug — имя колонки, уникальность значения которой проверяется
+             * 3. значение, по которому из проверки исключается запись таблицы БД
+             * 4. поле, по которому из проверки исключается запись таблицы БД
+             * Для проверки будет использован такой SQL-запрос к базе данныхЖ
+             * SELECT COUNT(*) FROM `categories` WHERE `slug` = '...' AND `id` <> 17
+             */
+            'slug' => 'required|max:100|unique:categories,slug,'.$id.',id|alpha_dash',
+            'image' => 'mimes:jpeg,jpg,png|max:5000'
+        ]);
+        // проверка пройдена, обновляем категорию
+        $category->update($request->all());
+        return redirect()
+            ->route('admin.category.show', ['category' => $category->id])
+            ->with('success', 'Категория была успешно исправлена');
+    }
+
+
 в єтот раз игры будут с блейдами...    
  create.blade.php и edit.blade.php.
  ---------------------------------------create
@@ -52,7 +102,7 @@ create, edit
     action="{{ route('admin.category.update', ['category' => $category->id]) }}">
     
     {/*///////////////////////////////////////////
-    //       явно указываем метод put
+    //       ЯВНО УКАЗЫВАЕМ МЕТОД PUT
     /////////////////////////////////////////////*/}
         @method('PUT')
         @csrf
@@ -140,3 +190,159 @@ create, edit
 @endforeach
     
 
+(https://tokmakov.msk.ru/blog/item/568) CRUD категрий 2
+create, edit
+    public function create() {
+      // для возможности выбора родителя
+        $parents = Category::roots();
+        return view('admin.category.create', compact('parents'));
+    }
+    /* ... */
+    public function edit(Category $category) {
+        // для возможности выбора родителя
+        $parents = Category::roots();
+        return view('admin.category.edit', compact('category', 'parents'));
+    }
+в єтот раз игры будут с блейдами...    
+ create.blade.php и edit.blade.php.
+ ---------------------------------------create
+ ....
+<form method="post" action="{{ route('admin.category.store') }}" enctype="multipart/form-data">
+    @csrf
+    <input type="text" name="name" placeholder="Наименование" maxlength="100" value="{{ old('name') ?? '' }}">
+    <input type="text" name="slug" placeholder="ЧПУ (на англ.)" maxlength="100" value="{{ old('slug') ?? '' }}">
+    <select name="parent_id" class="form-control" title="Родитель">
+        <option value="0">Без родителя</option>
+        @foreach($parents as $parent)
+        <option value="{{ $parent->id }}">{{ $parent->name }}</option>  
+        @if ($parent->children->count())                 
+ 
+        {/* ///////////////////////////////////////////////////////////////  
+                // КРОМЕ РОДИТЕЛЯ ЕСТЬ ВОЗМОЖНОСТЬ ВЫБРАТЬ ЕГО ПОТОМКОВ      //
+                /////////////////////////////////////////////////////////////// */}
+            @foreach($parent->children as $child)                        
+                <option value="{{ $child->id }}">— {{ $child->name }}</option>
+            @endforeach
+
+            {/* //////////////////////////////////////////////////////////////////            
+                // Т.Е. ЕСТЬ ВОЗМОЖНОСТЬ ПОЛУЧИТЬ ЛЮБОЙ УРОВЕНЬ ВЛОЖЕННОСТИ     //       
+                ////////////////////////////////////////////////////////////////// */}
+                        
+        @endif
+        @endforeach
+    </select>
+    
+    <textarea class="form-control" name="content" placeholder="Краткое описание"
+                      maxlength="200" rows="3">{{ old('content') ?? '' }}</textarea>
+    <input type="file" class="form-control-file" name="image" accept="image/png, image/jpeg">
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+    ---------------------------------------------
+---------------------------------------EDIT
+ ....
+ <form method="post" enctype="multipart/form-data" 
+    action="{{ route('admin.category.update', ['category' => $category->id]) }}">
+    
+    {/*///////////////////////////////////////////
+    //       ЯВНО УКАЗЫВАЕМ МЕТОД PUT
+    /////////////////////////////////////////////*/}
+        @method('PUT')
+        @csrf
+        
+    <input type="text" name="name" placeholder="Наименование" value="{{ old('name') ?? $category->name }}">
+    <input type="text" name="title" placeholder="ЧПУ (на англ.)" value="{{ old('slug') ?? $category->slug }}">
+    <select name="parent_id" class="form-control" title="Родитель"> 
+        <option value="0">Без родителя</option>
+        @if (count($parents))
+        {*///////////////////////////////////////////////////////
+        //  ДЛЯ ВОЗМОЖНОСТИ ВІБОРА УЖЕ ИСПОЛЬЗУЕМ PART
+        /////////////////////////////////////////////////////////*}
+            @include('admin.category.part.branch', ['items' => $parents, 'level' => -1])
+        @endif
+        </select>
+        
+        <textarea name="content" placeholder="Краткое описание" maxlength="200" rows="3">
+            {{ old('content') ?? $category->content }}
+        </textarea>
+        <input type="file"  name="image" accept="image/png, image/jpeg">
+        @isset($category->image)
+        <input type="checkbox" class="form-check-input" name="remove" id="remove">
+        <label class="form-check-label" for="remove">Удалить загруженное изображение</label>
+        @endisset
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+ 
+ /* ВНЕШН ПОДКЛЮЧ PART БУДЕТ, ЗАРАЗА, РЕКУРСИВНІМ */
+@php 
+  $level++    /* ОПРЕДЕЛИТ КОЛ-ВО ПРОБЕЛОВ НА ОТСТУП В ДЕТЯХ */ 
+@endphp  
+@foreach($items as $item)
+    <option value="{{ $item->id }}">
+        @if ($level) {!! str_repeat('&nbsp;&nbsp;&nbsp;', $level) !!}  @endif {{ $item->name }}
+    </option>
+    
+    /*
+    *  ЕСЛИ У ТЕКУЩЕГО ДАТАСЕТА ЕСТЬ ДЕТИ - ПОЛДКЛЮЧИМ ЕГО ЖЕ И ДАТАСЕТОМ БУДУТ ДЕТИ
+    */
+    @if ($item->children->count())
+        @include('admin.category.part.branch', ['items' => $item->children, 'level' => $level])
+    @endif
+@endforeach
+
+----------------- оптимизация шаблонов (сделать одну <form>)
+
+   edit <------+     +-------> create
+               |     |
+          +-->part.form     // содержит виджеті input 
+          | 
+     +-->part.branch --+    // содержит дерево родительских категорий   @include('admin.category.part.branch', ['items' => $parents, 'level' => -1])
+     |                 |
+     +-----------------+
+
+напр  
+1. edit.blade
+    <form method="post" enctype="multipart/form-data"
+          action="{{ route('admin.category.update', ['category' => $category->id]) }}">
+        @method('PUT')
+        @include('admin.category.part.form')
+    </form>
+
+
+2. form.blade (общ кусок кода для разн форм)
+
+<input name="name" placeholder="Наименование" value="{{ old('name') ?? $category->name ?? '' }}">
+....
+{/*  ВСТАВКА ВЫБОРКИ КАТЕГОРИЙ*/}
+<select name="parent_id" class="form-control" title="Родитель">
+    <option value="0">Без родителя</option>
+        @if (count($parents))
+            @include('admin.category.part.branch', ['items' => $parents, 'level' => -1])
+        @endif
+</select>        
+-------------------------------------
+
+3. branch.blade
+@foreach($items as $item)
+    <option value="{{ $item->id }}">
+        @if ($level) {!! str_repeat('&nbsp;&nbsp;&nbsp;', $level) !!}  @endif {{ $item->name }}
+    </option>
+    @if ($item->children->count())
+        @include('admin.category.part.branch', ['items' => $item->children, 'level' => $level])
+    @endif
+@endforeach
+----------------------------------------------------------------
+    
+БЛЯДСТВО С ХРАНЕНИЕМ ФАЙЛОВ
+файлы физически хранятся в \storage\app\public
+для доступа к ним из веб, нужна ссылка (ярлык)
+#php artisan storage:link
+
+/public/storage ====> \storage\app\public
+тогда
+http://127.0.0.1:8000/storage/icon.png  покажет то что лежит в \storage\app\public
+использовать можно
+    <img src="{{ asset('storage/privat24.png') }}" alt="" />
+    
+    <img src="{{ Storage::disk('public')->url('privat24.png') }}" alt="" />
+    NB! в процессе разработки с Storage могут овзниркнуть траблы. url он выдает как localhost, a нам треба 127.0.0.1:8000
+    
