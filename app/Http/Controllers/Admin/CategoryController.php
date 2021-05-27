@@ -2,12 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\ImageSaver;
+
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    
+    private $imageSaver;
+
+    public function __construct(ImageSaver $imageSaver) {
+        $this->imageSaver = $imageSaver;
+    }
+
+    
     /**
      * Display a listing of the resource.
      *
@@ -46,9 +56,11 @@ class CategoryController extends Controller
             'slug' => 'required|max:100|unique:categories,slug|alpha_dash',
             'image' => 'mimes:jpeg,jpg,png|max:5000'
         ]);
-            // проверка пройдена, сохраняем категорию
-        $category = Category::create($request->all());
-        
+
+          // проверка пройдена, сохраняем категорию
+        $data = $request->all();
+        $data['image'] = $this->imageSaver->upload($request, null, 'category');
+        $category = Category::create($data);
         return redirect()
             ->route('admin.category.show', ['category' => $category->id])
             ->with('success', 'Новая категория успешно создана');
@@ -105,7 +117,9 @@ class CategoryController extends Controller
            'image' => 'mimes:jpeg,jpg,png|max:5000'
        ]);
        // проверка пройдена, обновляем категорию
-       $category->update($request->all());
+       $data = $request->all();
+       $data['image'] = $this->imageSaver->upload($request, null, 'category');
+       $category = Category::update($data);    
        return redirect()
            ->route('admin.category.show', ['category' => $category->id])
            ->with('success', 'Категория была успешно исправлена');       //
@@ -128,6 +142,7 @@ class CategoryController extends Controller
         if (!empty($errors)) {
             return back()->withErrors($errors);
         }
+        $this->imageSaver->remove($category, 'category');
         $category->delete();
         return redirect()
             ->route('admin.category.index')

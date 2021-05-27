@@ -1,1 +1,183 @@
 https://tokmakov.msk.ru/blog/item/570  Панель управления, обрезка изображения и валидация данных
+#php artisan storage:link
+в паблике появляется линк  /public/storage/ =>  \storage\app\public\
+   public function store(Request $request) {
+    
+        $this->validate($request, [ 'parent_id' => 'integer',....  ]);
+        
+        /*
+         * Проверка пройдена, создаем категорию
+         */
+        $file = $request->file('image');
+        if ($file) { // был загружен файл изображения
+            $path = $file->store('catalog/category/source', 'public');
+            $base = basename($path);
+        }
+        $data = $request->all();
+        $data['image'] = $base ?? null;
+        $category = Category::create($data);
+    }
+
+    ...
+     public function update(Request $request, Category $category) {
+         ....
+        if ($request->remove) { // если надо удалить изображение
+            $old = $category->image;
+            if ($old) {
+                Storage::disk('public')->delete('catalog/category/source/' . $old);
+            }
+        }
+        $file = $request->file('image');
+        if ($file) { // был загружен файл изображения
+            $path = $file->store('catalog/category/source', 'public');
+            $base = basename($path);
+            // удаляем старый файл изображения
+            $old = $category->image;
+            if ($old) {
+                Storage::disk('public')->delete('catalog/category/source/' . $old);
+            }
+        }
+        $data = $request->all();
+        $data['image'] = $base ?? null;
+        $category->update($data);
+        ...
+     }
+
+     ==============Обрезка изображения =====================
+     нужен доп пакет  intervention/image  (создает обрезки 600x300, 300x150)
+     #composer require intervention/image
+     config/app.php
+     return [
+    ...
+        'providers' => [
+        ...
+            Intervention\Image\ImageServiceProvider::class,
+        ],
+        
+        'aliases' => [
+            ...
+            'Image' => Intervention\Image\Facades\Image::class,
+        ]
+    ...
+    ]
+уууу.  создаем первый хелпер (в коробке папки app/Helpers не было)
+
+class ImageSaver {
+    ...
+    public function upload($request, $item, $dir) {
+        $name = $item->image ?? null;
+        if ($item && $request->remove) { // если надо удалить изображение
+            $this->remove($item, $dir);
+            $name = null;
+        }
+        $source = $request->file('image');
+        if ($source) { // если было загружено изображение
+            // перед загрузкой нового изображения удаляем старое
+            if ($item && $item->image) {
+                $this->remove($item, $dir);
+            }
+            $ext = $source->extension();
+            // сохраняем загруженное изображение без всяких изменений
+            $path = $source->store('catalog/'.$dir.'/source', 'public');
+            $path = Storage::disk('public')->path($path); // абсолютный путь
+            $name = basename($path); // имя файла
+            // создаем уменьшенное изображение 600x300px, качество 100%
+            $dst = 'catalog/'.$dir.'/image/';
+            $this->resize($path, $dst, 600, 300, $ext);
+            // создаем уменьшенное изображение 300x150px, качество 100%
+            $dst = 'catalog/'.$dir.'/thumb/';
+            $this->resize($path, $dst, 300, 150, $ext);
+        }
+        return $name;
+    }
+    public function resize($src, $dst, $width, $height, $ext) {
+               // создаем уменьшенное изображение width x height, качество 100%
+        $image = Image::make($src)
+            ->heighten($height)
+            ->resizeCanvas($width, $height, 'center', false, 'eeeeee')
+            ->encode($ext, 100);
+        // сохраняем это изображение под тем же именем, что исходное
+        $name = basename($src);
+        Storage::disk('public')->put($dst . $name, $image);
+        $image->destroy();
+    }
+
+    public function remove( $item, $dir) {
+       $old = $item->image;
+        if ($old) {
+            Storage::disk('public')->delete('catalog/'.$dir.'/source/' . $old);
+            Storage::disk('public')->delete('catalog/'.$dir.'/image/' . $old);
+            Storage::disk('public')->delete('catalog/'.$dir.'/thumb/' . $old);
+        }       
+    }
+    
+}
+
+применяем єтот хелпер в категори_контроллер
+
+================ ПОЯВИЛОСЬ НОВОЕ =====================
+    private $imageSaver;
+
+    public function __construct(ImageSaver $imageSaver) {
+        $this->imageSaver = $imageSaver;
+    }
+
+--------------------------------------
+
+ public function store(Request $request) {
+     ....
+   >>> =================  БЫЛО ====================
+      // проверка пройдена, сохраняем категорию
+        $category = Category::create($request->all());
+
+    <<<  =============== СТАЛО ===================
+        $data = $request->all();
+        $data['image'] = $this->imageSaver->upload($request, null, 'category');
+        $category = Category::create($data);   
+ }
+
+аналогично 
+public function update(Request $request, Category $category) {
+   ...
+   >>> =================  БЫЛО ====================
+   // проверка пройдена, обновляем категорию
+       $category->update($request->all());
+
+   <<<  =============== СТАЛО ===================
+    $data = $request->all();
+    $data['image'] = $this->imageSaver->upload($request, null, 'category');
+    $category->update($data);       
+}
+
+ public function destroy(Category $category) {
+     ....
+   >>> =================  БЫЛО ====================
+
+        $category->delete();
+
+   <<<  =============== СТАЛО ===================
+        $this->imageSaver->remove($category, 'category');
+        $category->delete();
+        ...
+ }
+ ---------------  изменяем код блейда (views/admin/category/show.blade.php)
+
+>>> ========================= БЫЛО =====================
+
+       <div class="col-md-6">
+            <img src="https://via.placeholder.com/600x200" alt="" class="img-fluid">
+        </div>
+
+<<< =================  СТАЛО =======================
+       <div class="col-md-6">
+            @php
+                if ($category->image) {
+                    // $url = url('storage/catalog/category/image/' . $category->image);
+                    $url = Storage::disk('public')->url('catalog/category/image/' . $category->image);
+                } else {
+                    // $url = url('storage/catalog/category/image/default.jpg');
+                    $url = Storage::disk('public')->url('catalog/category/image/default.jpg');
+                }
+            @endphp
+            <img src="{{ $url }}" alt="" class="img-fluid">
+        </div>        
