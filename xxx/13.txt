@@ -1,20 +1,21 @@
-https://tokmakov.msk.ru/blog/item/570  Панель управления, обрезка изображения и валидация данных
-#php artisan storage:link
+https://tokmakov.msk.ru/blog/item/570  
+Панель управления, обрезка изображения и валидация данных
+ИЗОБРАЖЕНИЯ: загрузка, удаление, обрезка. АРХИ: хелпер по изображениям
+
+#php artisan storage:linkу
 в паблике появляется линк  /public/storage/ =>  \storage\app\public\
    public function store(Request $request) {
     
         $this->validate($request, [ 'parent_id' => 'integer',....  ]);
         
-        /*
-         * Проверка пройдена, создаем категорию
-         */
+        /* Проверка пройдена, создаем категорию */
         $file = $request->file('image');
         if ($file) { // был загружен файл изображения
-            $path = $file->store('catalog/category/source', 'public');
+            $path = $file->store('catalog/category/source', 'public');       <<<<<<< загрузка >>>>>>>
             $base = basename($path);
         }
         $data = $request->all();
-        $data['image'] = $base ?? null;
+        $data['image'] = $base ?? null;  // вернутый выше filename цепляем к data->image
         $category = Category::create($data);
     }
 
@@ -24,17 +25,17 @@ https://tokmakov.msk.ru/blog/item/570  Панель управления, обр
         if ($request->remove) { // если надо удалить изображение
             $old = $category->image;
             if ($old) {
-                Storage::disk('public')->delete('catalog/category/source/' . $old);
+                Storage::disk('public')->delete('catalog/category/source/' . $old);   <<<<<<< удаление >>>>>>>
             }
         }
         $file = $request->file('image');
         if ($file) { // был загружен файл изображения
-            $path = $file->store('catalog/category/source', 'public');
+            $path = $file->store('catalog/category/source', 'public');               <<<<<<< загрузка >>>>>>>
             $base = basename($path);
             // удаляем старый файл изображения
             $old = $category->image;
             if ($old) {
-                Storage::disk('public')->delete('catalog/category/source/' . $old);
+                Storage::disk('public')->delete('catalog/category/source/' . $old);   <<<<<<< удаление >>>>>>>
             }
         }
         $data = $request->all();
@@ -126,11 +127,11 @@ class ImageSaver {
 
  public function store(Request $request) {
      ....
-   >>> =================  БЫЛО ====================
+   <<< =================  БЫЛО ====================
       // проверка пройдена, сохраняем категорию
         $category = Category::create($request->all());
 
-    <<<  =============== СТАЛО ===================
+    >>>  =============== СТАЛО ===================
         $data = $request->all();
         $data['image'] = $this->imageSaver->upload($request, null, 'category');
         $category = Category::create($data);   
@@ -139,11 +140,11 @@ class ImageSaver {
 аналогично 
 public function update(Request $request, Category $category) {
    ...
-   >>> =================  БЫЛО ====================
+   <<< =================  БЫЛО ====================
    // проверка пройдена, обновляем категорию
        $category->update($request->all());
 
-   <<<  =============== СТАЛО ===================
+   >>>  =============== СТАЛО ===================
     $data = $request->all();
     $data['image'] = $this->imageSaver->upload($request, null, 'category');
     $category->update($data);       
@@ -151,33 +152,118 @@ public function update(Request $request, Category $category) {
 
  public function destroy(Category $category) {
      ....
-   >>> =================  БЫЛО ====================
+   <<< =================  БЫЛО ====================
 
         $category->delete();
 
-   <<<  =============== СТАЛО ===================
+   >>>  =============== СТАЛО ===================
         $this->imageSaver->remove($category, 'category');
         $category->delete();
         ...
  }
  ---------------  изменяем код блейда (views/admin/category/show.blade.php)
 
->>> ========================= БЫЛО =====================
+<<< ========================= БЫЛО =====================
 
        <div class="col-md-6">
             <img src="https://via.placeholder.com/600x200" alt="" class="img-fluid">
         </div>
 
-<<< =================  СТАЛО =======================
-       <div class="col-md-6">
-            @php
-                if ($category->image) {
-                    // $url = url('storage/catalog/category/image/' . $category->image);
-                    $url = Storage::disk('public')->url('catalog/category/image/' . $category->image);
-                } else {
-                    // $url = url('storage/catalog/category/image/default.jpg');
-                    $url = Storage::disk('public')->url('catalog/category/image/default.jpg');
-                }
-            @endphp
-            <img src="{{ $url }}" alt="" class="img-fluid">
-        </div>        
+>>> =================  СТАЛО =======================
+    <div class="col-md-6">
+    @php
+        if ($category->image) {
+
+            $url = Storage::disk('public')->url('catalog/category/image/'.$category->image); <<<< ожидания >>>>
+                // код выше  $url = Storage::disk('public')->url('  возвращает localhost
+                // НЕ БАГ А ФИЧА ))))  потому тупо прописываем  http://127.0.0.1:8000/
+            $url = "http://127.0.0.1:8000/storage/catalog/category/image/".$category->image;  <<<< реальность >>>>
+
+            } else {
+
+                ///////////////// ТА ЖЕ ХРЕНЬ. ФИЧА.
+                // $url = url('storage/catalog/category/image/default.jpg');                <<<< ожидания >>>>
+
+                $url = Storage::disk('public')->url('catalog/category/image/default.jpg');  <<<< реальность >>>>
+
+            }
+    @endphp
+        <img src="{{ $url }}" alt="" class="img-fluid">
+    </div>        
+
+============================== РЕФАКТОРИНГ ВАЛИДАЦИИ ===================================
+валидация отдельн классом (внекл чтение:  https://laravel.demiart.ru/laravel-validation-controllers-form-requests-and-rules/)
+
+вместо отдельных 
+...
+         // проверяем данные формы создания категории
+        $this->validate($request, [
+            'parent_id' => 'integer',
+            'name' => 'required|max:100',
+            'slug' => 'required|max:100|unique:categories,slug|alpha_dash',
+            'image' => 'mimes:jpeg,jpg,png|max:5000'
+        ]);
+....  создадим общее        
+
+#php artisan make:request CategoryCatalogRequest
+родилось:
+namespace App\Http\Requests;
+...
+    class CategoryCatalogRequest extends FormRequest
+там в общ два метода 
+   public function authorize()
+    {
+        return falese; // or true  авторизированній может реквестить или нет?
+    }
+
+    public function rules()
+    {
+        switch ($this->method()) {
+            case 'POST':   // приведено для примера
+                return [
+                    'parent_id' => 'integer',
+                    'name' => 'required|max:100',
+                    'slug' => 'required|max:100|unique:categories,slug|regex:~^[-_a-z0-9]+$~i',
+                    'image' => 'mimes:jpeg,jpg,png|max:5000'
+                ];
+            case 'PUT':
+            case 'PATCH':
+                
+                // получаем объект модели категории из маршрута: admin/category/{category}
+                $model = $this->route('category');
+                // из объекта модели получаем уникальный идентификатор для валидации
+                $id = $model->id;
+                
+                return [
+                // ...какие-то правила для пут, патч
+                ];
+        }
+    }
+
+    ----------- вписка валидатора в категори_контроллер
+
+use App\Http\Requests\CategoryCatalogRequest;  ++++++++++++++++++++++
+
+<<<<  БЫЛО
+public function store(Request $request)
+  
+        $this->validate($request, [
+            'parent_id' => 'integer',
+            'name' => 'required|max:100',
+            'slug' => 'required|max:100|unique:categories,slug|alpha_dash',
+            'image' => 'mimes:jpeg,jpg,png|max:5000'
+        ]);
+
+....    
+}
+
+>>>>  СТАЛО   ($this->validate  убрали, в параметрах CategoryCatalogRequest )
+  public function store(CategoryCatalogRequest $request) {
+  
+        $data = $request->all();
+        $data['image'] = $this->imageSaver->upload($request, null, 'category');
+        $category = Category::create($data);
+        return redirect()
+            ->route('admin.category.show', ['category' => $category->id])
+            ->with('success', 'Новая категория успешно создана');
+    }

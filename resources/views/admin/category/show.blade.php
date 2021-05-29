@@ -16,8 +16,9 @@
         <div class="col-md-6">
             @php
                 if ($category->image) {
-                    // $url = url('storage/catalog/category/image/' . $category->image);
                     $url = Storage::disk('public')->url('catalog/category/image/' . $category->image);
+                    // НЕ БАГ А ФИЧА ))))  вместо localhost тупо прописываем  http://127.0.0.1:8000/
+                    $url = "http://127.0.0.1:8000/storage/catalog/category/image/".$category->image;
                 } else {
                     // $url = url('storage/catalog/category/image/default.jpg');
                     $url = "https://via.placeholder.com/600x200";
@@ -66,12 +67,25 @@
     @else
         <p>Нет дочерних категорий</p>
     @endif
-    <form method="post"
-          action="{{ route('admin.category.destroy', ['category' => $category->id]) }}">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger">
-            Удалить категорию
-        </button>
-    </form>
+    <div class="row">
+        <div class="col-6">
+            <form method="post" action="{{ route('admin.category.edit', ['category' => $category->id]) }}">
+                @csrf
+                @method('GET')
+                <button type="submit" class="btn btn-success">
+                    Редактировать категорию
+                </button> 
+            </form>
+        </div>
+        <div class="col-6">
+            <form method="post"
+                action="{{ route('admin.category.destroy', ['category' => $category->id]) }}">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">
+                    Удалить категорию
+                </button>
+            </form>
+        </div>
+    </div>    
 @endsection

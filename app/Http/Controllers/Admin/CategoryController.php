@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\ImageSaver;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoryCatalogRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
@@ -47,15 +48,9 @@ class CategoryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CategoryCatalogRequest $request)
     {
-            // проверяем данные формы создания категории
-        $this->validate($request, [
-            'parent_id' => 'integer',
-            'name' => 'required|max:100',
-            'slug' => 'required|max:100|unique:categories,slug|alpha_dash',
-            'image' => 'mimes:jpeg,jpg,png|max:5000'
-        ]);
+    
 
           // проверка пройдена, сохраняем категорию
         $data = $request->all();
@@ -97,29 +92,11 @@ class CategoryController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Category $category)
+    public function update(CategoryCatalogRequest $request, Category $category)
     {
-       // проверяем данные формы редактирования категории
-       $id = $category->id;
-       $this->validate($request, [
-           'parent_id' => 'integer',
-           'name' => 'required|max:100',
-           /*
-            * Проверка на уникальность slug, исключая эту категорию по идентифкатору:
-            * 1. categories — таблица базы данных, где проверяется уникальность
-            * 2. slug — имя колонки, уникальность значения которой проверяется
-            * 3. значение, по которому из проверки исключается запись таблицы БД
-            * 4. поле, по которому из проверки исключается запись таблицы БД
-            * Для проверки будет использован такой SQL-запрос к базе данныхЖ
-            * SELECT COUNT(*) FROM `categories` WHERE `slug` = '...' AND `id` <> 17
-            */
-           'slug' => 'required|max:100|unique:categories,slug,'.$id.',id|alpha_dash',
-           'image' => 'mimes:jpeg,jpg,png|max:5000'
-       ]);
-       // проверка пройдена, обновляем категорию
        $data = $request->all();
        $data['image'] = $this->imageSaver->upload($request, null, 'category');
-       $category = Category::update($data);    
+       $category->update($data);    
        return redirect()
            ->route('admin.category.show', ['category' => $category->id])
            ->with('success', 'Категория была успешно исправлена');       //
@@ -139,8 +116,10 @@ class CategoryController extends Controller
         if ($category->products->count()) {
             $errors[] = 'Нельзя удалить категорию, которая содержит товары';
         }
+        // var_dump($errors); die;
         if (!empty($errors)) {
             return back()->withErrors($errors);
+            // return back()->with('error', $errors[0]);
         }
         $this->imageSaver->remove($category, 'category');
         $category->delete();
