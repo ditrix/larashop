@@ -1,0 +1,4 @@
+- ----- CRUD брендов
+- [shop-14 admin. бренды crud 1](https://tokmakov.msk.ru/blog/item/571)
+- [shop-15 admin. бренды crud 2](https://tokmakov.msk.ru/blog/item/572)
+
