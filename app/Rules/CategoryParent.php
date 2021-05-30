@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
+use App\Models\Category;
 
 class CategoryParent implements Rule
 {
@@ -11,9 +12,8 @@ class CategoryParent implements Rule
      *
      * @return void
      */
-    public function __construct()
-    {
-        //
+    public function __construct(Category $category) {
+        $this->category = $category;
     }
 
     /**
@@ -25,7 +25,8 @@ class CategoryParent implements Rule
      */
     public function passes($attribute, $value)
     {
-        //
+        // сообщить пройдено-ли правило валидации
+        return $this->category->validParent($value);
     }
 
     /**
@@ -35,6 +36,6 @@ class CategoryParent implements Rule
      */
     public function message()
     {
-        return 'The validation error message.';
+        return trans('validation.custom.parent_id.invalid');
     }
 }

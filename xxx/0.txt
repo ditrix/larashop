@@ -28,3 +28,15 @@ PUT/PATCH  /item/{id}       update    item.update
 DELETE     /item/{id}       destroy   item.destroy
 */
 php artisan route:list
+
+  для отображения сообщений в блейде
+    
+    @if ($message = Session::get('success'))
+        <span>{{ $message }}</span>
+    @endif
+            
+    @if ($errors->any())
+        @foreach ($errors->all() as $error)
+            <span>{{ $error }}</span>
+        @endforeach
+    @endif
