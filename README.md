@@ -11,6 +11,10 @@
 - [shop-11 CRUD Catalog 1 (show, index, delete)](https://tokmakov.msk.ru/blog/item/567)
 - [shop-12 CRUD Catalog 2 (create, edit)](https://tokmakov.msk.ru/blog/item/568) 
 - [shop-13 ИЗОБРАЖЕНИЯ: загрузка, удаление, обрезка. АРХИТ: хелпер по изображениям, валидация форм по феншую](https://tokmakov.msk.ru/blog/item/570)
-- [shop-14 admin.  проверки. crud по брендами. заголовки](https://tokmakov.msk.ru/blog/item/571)
+- [shop-14 admin.  проверки.  заголовки](https://tokmakov.msk.ru/blog/item/571)
+- ----- CRUD брендов
+- [shop-14 admin. бренды crud 1](https://tokmakov.msk.ru/blog/item/571)
+- [shop-15 admin. бренды crud 2](https://tokmakov.msk.ru/blog/item/572)
+
 
 

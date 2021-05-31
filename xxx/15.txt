@@ -1,4 +1,20 @@
-- ----- CRUD брендов
+- ----- shop-15.  CRUD брендов
 - [shop-14 admin. бренды crud 1](https://tokmakov.msk.ru/blog/item/571)
 - [shop-15 admin. бренды crud 2](https://tokmakov.msk.ru/blog/item/572)
 
+1. ресурсн контроллер
+#php artisan make:controller Admin/BrandController --resource --model=Models/Brand
+Route::group([
+    'as' => 'admin.', // имя маршрута, например admin.index
+    'prefix' => 'admin', // префикс маршрута, например admin/index
+    'namespace' => 'Admin', // пространство имен контроллера
+    'middleware' => ['auth', 'admin'] // один или несколько посредников
+], function () {
+    // главная страница панели управления
+    Route::get('index', 'IndexController')->name('index');
+    // CRUD-операции над категориями каталога
+    Route::resource('category', 'CategoryController');
+
+    ++++++++++++++++++++++ CRUD-операции над брендами каталога
+    Route::resource('brand', 'BrandController'); // +++++++++++++++++++++++++++++++++++++++++++++++++
+});

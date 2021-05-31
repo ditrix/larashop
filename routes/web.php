@@ -53,19 +53,11 @@ Route::group([
     Route::get('index', 'IndexController')->name('index');
     // CRUD-операции над категориями каталога
     Route::resource('category', 'CategoryController');
+    //CRUD-операции над брендами каталога
+    Route::resource('brand', 'BrandController');
 });
 
 
-
-// второй способ добавления посредников
-Route::group([
-    'as' => 'admin.', // имя маршрута, например admin.index
-    'prefix' => 'admin', // префикс маршрута, например admin/index
-    'namespace' => 'Admin', // пространство имен контроллера
-    'middleware' => ['auth', 'admin'] // один или несколько посредников
-], function () {
-    Route::get('index', 'IndexController')->name('index');
-});
 
 
 //Auth::routes();
