@@ -18,3 +18,40 @@ Route::group([
     ++++++++++++++++++++++ CRUD-операции над брендами каталога
     Route::resource('brand', 'BrandController'); // +++++++++++++++++++++++++++++++++++++++++++++++++
 });
+
+========================  ВАЛИДАЦИЯ ========================
+валидация будет сделана через наследование. 
+
+
+<<<<<<<<<<<<<<   т.е. было.
+<<< use App\Rules\CategoryParent;
+<<< .....
+<<< class CategoryCatalogRequest extends FormRequest {...}
+
+#php artisan make:request BrandCatalogRequest
+
+
+>>>>>> стало
+
+        +------ CatalogRequest --------+
+        |                              |  
+CategoryCatalogRequest       BrandCatalogRequest    
+
+abstract class CatalogRequest extends FormRequest {
+    ...
+     protected $entity = [];  //  c какой сущностью сейчас работаем: категория, бренд, товар ?  // определен в потомках
+    ...
+
+}
+
+class CategoryCatalogRequest extends CatalogRequest {
+    ...
+    protected $entity = ['name' => 'category', 'table' => 'categories'];
+    ...
+}
+
+class BrandCatalogRequest extends CatalogRequest {
+    ...
+    protected $entity = ['name' => 'brand', 'table' => 'brands'];
+    ...
+}

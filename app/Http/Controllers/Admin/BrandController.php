@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\ImageSaver;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Http\Requests\BrandCatalogRequest;
 use Illuminate\Http\Request;
 
 class BrandController extends Controller
@@ -42,7 +43,7 @@ class BrandController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(BrandCatalogRequest $request)
     {
         $data = $request->all();
         $data['image'] = $this->imageSaver->upload($request, null, 'brand');
@@ -81,7 +82,7 @@ class BrandController extends Controller
      * @param  \App\Models\Brand  $brand
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Brand $brand)
+    public function update(BrandCatalogRequest $request, Brand $brand)
     {
         $data = $request->all();
         $data['image'] = $this->imageSaver->upload($request, $brand, 'brand');

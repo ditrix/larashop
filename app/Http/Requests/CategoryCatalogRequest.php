@@ -2,49 +2,58 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\CategoryParent;
 
-class CategoryCatalogRequest extends FormRequest
+class CategoryCatalogRequest extends CatalogRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
+   
+ /**
+     * С какой сущностью сейчас работаем (категория каталога)
+     * @var array
      */
-    public function authorize()
-    {
-        return true;
+    protected $entity = [
+        'name' => 'category',
+        'table' => 'categories'
+    ];
+
+    public function authorize() {
+        return parent::authorize();
+    }
+
+    public function rules() {
+        return parent::rules();
+    }
+
+    
+    /**
+     * Объединяет дефолтные правила и правила, специфичные для категории
+     * для проверки данных при добавлении новой категории
+     */
+    protected function createItem() {
+        $rules = [
+            'parent_id' => [
+                'required',
+                'regex:~^[0-9]+$~',
+            ],
+        ];
+        return array_merge(parent::createItem(), $rules);
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * Объединяет дефолтные правила и правила, специфичные для категории
+     * для проверки данных при обновлении существующей категории
      */
-    public function rules()
-    {
-        switch ($this->method()) {
-            case 'POST':
-                return [
-                    'parent_id' => 'required|regex:~^[0-9]+$~',
-                    'name' => 'required|max:100',
-                    'slug' => 'required|max:100|unique:categories,slug|regex:~^[-_a-z0-9]+$~i',
-                    'image' => 'mimes:jpeg,jpg,png|max:5000'
-                ];
-            case 'PUT':
-            case 'PATCH':
-                // получаем объект модели категории из маршрута: admin/category/{category}
-                $model = $this->route('category');
-                // из объекта модели получаем уникальный идентификатор для валидации
-                $id = $model->id;
-                return [
-                   // задаем правило валидации, что категорию не пытаются поместить внутрь себя
-                   'parent_id' => ['required', 'regex:~^[0-9]+$~', new CategoryParent($model)],
-                    'name' => 'required|max:100',
-                    'slug' => 'required|max:100|unique:categories,slug,'.$id.',id|regex:~^[-_a-z0-9]+$~i',
-                    'image' => 'mimes:jpeg,jpg,png|max:5000'
-                ];
-        }
+    protected function updateItem() {
+        // получаем объект модели категории из маршрута: admin/category/{category}
+        $model = $this->route('category');
+        $rules = [
+            'parent_id' => [
+                'required',
+                'regex:~^[0-9]+$~',
+                // задаем правило, чтобы категорию нельзя было поместить внутрь себя
+                new CategoryParent($model)
+            ],
+        ];
+        return array_merge(parent::updateItem(), $rules);
     }
 }
