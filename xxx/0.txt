@@ -43,3 +43,6 @@ php artisan route:list
 
  создание ресурсного контроллера (исполь в CRUD) т.е. под конкретную модель
  php artisan make:controller CategoryController --resource --model=Category
+
+
+ test git
