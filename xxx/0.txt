@@ -46,3 +46,8 @@ php artisan route:list
 
 
  test git 1
+
+ ------переход с https  на ssh
+(https://devacademy.ru/recipe/kak-izmenit-git-remote-url)
+ git remote set-url origin git@gitserver.com:user/repository_name.git
+
