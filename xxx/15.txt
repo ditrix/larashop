@@ -1,7 +1,8 @@
 - ----- shop-15.  CRUD брендов
 - [shop-14 admin. бренды crud 1](https://tokmakov.msk.ru/blog/item/571)
 - [shop-15 admin. бренды crud 2](https://tokmakov.msk.ru/blog/item/572)
-
+- ВАЛИДАЦИЯ через наследование (общ для брендов и каталогов)
+- РЕФАКТОРИНГ АСАЙДА КАТАЛОГОВАЛОГОВ на бесконечное число дочерних записей
 1. ресурсн контроллер
 #php artisan make:controller Admin/BrandController --resource --model=Models/Brand
 Route::group([

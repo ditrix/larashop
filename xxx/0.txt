@@ -43,3 +43,7 @@ php artisan route:list
 
  создание ресурсного контроллера (исполь в CRUD) т.е. под конкретную модель
  php artisan make:controller CategoryController --resource --model=Category
+
+ статья о валидации (в контроллерах или в классах запроса или кастомных правилах)
+ https://laravel.demiart.ru/laravel-validation-controllers-form-requests-and-rules/
+ 
