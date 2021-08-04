@@ -1,9 +1,7 @@
 - [shop-1 миграции сидеры](https://tokmakov.msk.ru/blog/item/556) 
 - [shop-2 Контроллеры, маршруты, шаблоны](https://tokmakov.msk.ru/blog/item/557)
 - [shop-3 Главная страница подробнее шаблоны](https://tokmakov.msk.ru/blog/item/558)
-- [shop-4 Работа с моделями, создание связывающих методов моделей
-
-](https://tokmakov.msk.ru/blog/item/559)
+- [shop-4 Работа с моделями, создание связывающих методов моделей](https://tokmakov.msk.ru/blog/item/559)
 - [shop-5 Basket, добавление товара в корзину](https://tokmakov.msk.ru/blog/item/560)
 - [shop-6 Basket](https://tokmakov.msk.ru/blog/item/561)
 - [shop-7 Левое меню, каталоги и бренды](https://tokmakov.msk.ru/blog/item/563)
