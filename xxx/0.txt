@@ -58,3 +58,12 @@ php artisan route:list
 
  создание ресурсного контроллера (исполь в CRUD) т.е. под конкретную модель
  php artisan make:controller CategoryController --resource --model=Category
+
+
+ test git 1
+
+ ------переход с https  на ssh
+(https://devacademy.ru/recipe/kak-izmenit-git-remote-url)
+ git remote set-url origin git@gitserver.com:user/repository_name.git
+ключи лежат как в d:\OpenServer так и в windows\users\username\.ssh
+в mvs установлено расширение

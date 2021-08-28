@@ -57,9 +57,6 @@ Route::group([
     Route::resource('brand', 'BrandController');
 });
 
-
-
-
 //Auth::routes();
 
 //Route::get('/home', 'HomeController@index')->name('home');
