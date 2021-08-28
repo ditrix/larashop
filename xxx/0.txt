@@ -5,6 +5,21 @@
 
 общие полезности
 
+создание auth
+до 6 версии (https://laravel.su/docs/5.2/authentication)
+php artisan make:auth
+до выполнения миграции
+
+--- после 6
+(https://tokmakov.msk.ru/blog/item/564)
+ Регистрация и аутентификация пользователей на сайте
+ локализация
+#php artisan ui:auth
+#npm install && npm run dev
+note: 
+добавился Auth::routes();https://laravel.su/docs/5.2/authentication
+
+
 чистка кеша (после пемещения моделей)
 > php artisan cache:clear # Очистка кэша приложения
 > php artisan route:clear # Очистка кэша маршрутов
